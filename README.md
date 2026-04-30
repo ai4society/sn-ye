@@ -1,23 +1,45 @@
 # SN-YE: Surya Namaskar Yoga Explorer
 
 [![SN-YE Website](https://img.shields.io/badge/Website-SN--YE-2563eb?style=for-the-badge)](https://ai4society.github.io/sn-ye/)
-[![Repository](https://img.shields.io/badge/GitHub-ai4society%2Fsn--ye-24292f?style=for-the-badge&logo=github)](https://github.com/ai4society/sn-ye)
+[![SN-YE Repository](https://img.shields.io/badge/GitHub-ai4society%2Fsn--ye-24292f?style=for-the-badge&logo=github)](https://github.com/ai4society/sn-ye)
 [![SN-YO Ontology](https://img.shields.io/badge/Ontology-SN--YO-1f6f8b?style=for-the-badge)](https://ai4society.github.io/sn-yo/)
+[![SN-YO Repository](https://img.shields.io/badge/GitHub-ai4society%2Fsn--yo-24292f?style=for-the-badge&logo=github)](https://github.com/ai4society/sn-yo)
 
-SN-YE is the standalone explorer website for querying and explaining the Surya Namaskar Yoga Ontology. It includes predefined competency-question queries, natural-language-to-SPARQL templates, multilingual asana label support, and CYP visual grounding.
+SN-YE is an ontology-grounded exploration interface for the Surya Namaskar Yoga Ontology. It lets users inspect predefined competency questions, generate SPARQL from natural-language questions, view retrieved ontology facts, and connect query results to visual references from the Common Yoga Protocol.
 
-## Contents
+The explorer is built as a static web application and runs directly in the browser over the local OWL knowledge graph.
 
-- `index.html`: GitHub Pages entry point for the explorer.
-- `explorer.html`: Same explorer page kept for compatibility with the original site route.
-- `models/`: Local ontology copy used by the explorer, including `models/master.owl`.
-- `images/cyp-pages/`: Common Yoga Protocol visual references used in query results.
-- `css/`: Shared website styling and explorer-specific styling.
-- `js/`: Ontology parser, predefined query data, natural-language planner, and explorer UI logic.
+## Highlights
 
-## Run Locally
+- Provides predefined SPARQL-backed competency questions for Surya Namaskar sequences, variants, asanas, mantras, chakras, body parts, breathing patterns, safety notes, and correction guidance.
+- Supports a Natural Language tab for mapping supported yoga questions to ontology-aware SPARQL templates.
+- Displays generated SPARQL alongside the retrieved ontology results.
+- Includes Hindi and Telugu asana label selection for result tables and generated queries.
+- Grounds pose and asana results with Common Yoga Protocol page images where available.
+- Uses the SN-YO ontology as its knowledge source.
 
-Serve the folder with any static file server:
+## Repository Structure
+
+- `index.html`: Main SN-YE browser entry point.
+- `explorer.html`: Explorer page retained for route compatibility.
+- `models/master.owl`: Ontology file used by the explorer.
+- `models/modules/`: Modular OWL files for the core model, base sequence, and variants.
+- `images/cyp-pages/`: Common Yoga Protocol visual references.
+- `css/`: Shared and explorer-specific styles.
+- `js/ontology-graph.js`: Browser-side OWL parser and ontology data model.
+- `js/explorer-data.js`: Predefined query definitions, result builders, and SPARQL templates.
+- `js/explorer-ai.js`: Natural-language intent and SPARQL-template support.
+- `js/explorer.js`: Explorer UI and interaction logic.
+
+## Explore
+
+Use the [SN-YE website](https://ai4society.github.io/sn-ye/) to run predefined and natural-language ontology queries.
+
+The companion ontology project is [SN-YO](https://ai4society.github.io/sn-yo/), with source available at [ai4society/sn-yo](https://github.com/ai4society/sn-yo).
+
+## Local Use
+
+Serve the repository with any static file server:
 
 ```bash
 python3 -m http.server 8080
@@ -25,17 +47,9 @@ python3 -m http.server 8080
 
 Then open `http://127.0.0.1:8080/`.
 
-## Natural Language Queries
+## Natural Language Support
 
-The Natural Language tab asks for a Gemini API key in the browser UI. Do not commit API keys to this repository. A local `js/education-local-config.js` file is intentionally not included.
-
-## GitHub Pages
-
-Push this folder to the [ai4society/sn-ye](https://github.com/ai4society/sn-ye) repository, then enable GitHub Pages from the repository root. The explorer is linked from the website badge above.
-
-The SN-YO link in `index.html` and `explorer.html` currently points to the [SN-YO website](https://ai4society.github.io/sn-yo/).
-
-Update that link if SN-YO is published under a different owner or repository name.
+Predefined ontology queries run fully in the browser. Natural-language explanation and planning workflows use a Gemini API key supplied by the user in the browser interface.
 
 ## License
 
