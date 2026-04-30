@@ -22,6 +22,18 @@
     '#C0BD7F', '#2B3514', '#E68310', '#D485B2', '#92AE31', '#463397', '#7F7E80', '#B26A00'
   ];
   var VARIANT_CHIP_ACCENTS = ['#2C5AA0', '#C46E2C', '#2E8B57', '#7A3E9D', '#B14E5A', '#0F6E8C'];
+  var SPARQL_PREFIX_URIS = {
+    rdf: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
+    rdfs: 'http://www.w3.org/2000/01/rdf-schema#',
+    owl: 'http://www.w3.org/2002/07/owl#',
+    xsd: 'http://www.w3.org/2001/XMLSchema#',
+    core: 'http://example.org/suryanamaskar/core#',
+    base: 'http://example.org/suryanamaskar/base-sn#',
+    v1: 'http://example.org/suryanamaskar/variant01#',
+    v2: 'http://example.org/suryanamaskar/variant02#',
+    v3: 'http://example.org/suryanamaskar/variant03#'
+  };
+  var SPARQL_RESULT_LIMIT = 200;
 
   var KNOWN_ASANA_CHIP_ACCENTS = {
     'Adho Mukha Svanasana': '#BA1C30',
@@ -108,6 +120,749 @@
       return state.data.normalizeResultLanguage(language);
     }
     return String(language || '').trim().toLowerCase() === 'te' ? 'te' : 'hi';
+  }
+
+  function cloneSparqlPrefixes(extraPrefixes) {
+    var prefixes = {};
+    Object.keys(SPARQL_PREFIX_URIS).forEach(function (key) {
+      prefixes[key] = SPARQL_PREFIX_URIS[key];
+    });
+    Object.keys(extraPrefixes || {}).forEach(function (key) {
+      prefixes[key] = extraPrefixes[key];
+    });
+    return prefixes;
+  }
+
+  function getSparqlPrefixBlock() {
+    return Object.keys(SPARQL_PREFIX_URIS).map(function (key) {
+      return 'PREFIX ' + key + ': <' + SPARQL_PREFIX_URIS[key] + '>';
+    }).join('\n');
+  }
+
+  function buildDefaultSparqlQuery(state) {
+    return getSparqlPrefixBlock() + '\n\n';
+  }
+
+  function stripSparqlComments(queryText) {
+    return String(queryText || '').split(/\n/).filter(function (line) {
+      return line.trim().charAt(0) !== '#';
+    }).join('\n');
+  }
+
+  function findMatchingBrace(source, openIndex) {
+    var depth = 0;
+    var inString = false;
+    var inUri = false;
+    var escaped = false;
+    var index;
+    var ch;
+
+    for (index = openIndex; index < source.length; index += 1) {
+      ch = source.charAt(index);
+
+      if (inString) {
+        if (escaped) {
+          escaped = false;
+        } else if (ch === '\\') {
+          escaped = true;
+        } else if (ch === '"') {
+          inString = false;
+        }
+        continue;
+      }
+
+      if (inUri) {
+        if (ch === '>') {
+          inUri = false;
+        }
+        continue;
+      }
+
+      if (ch === '"') {
+        inString = true;
+        continue;
+      }
+      if (ch === '<') {
+        inUri = true;
+        continue;
+      }
+      if (ch === '{') {
+        depth += 1;
+      } else if (ch === '}') {
+        depth -= 1;
+        if (depth === 0) {
+          return index;
+        }
+      }
+    }
+
+    return -1;
+  }
+
+  function splitOutsideSparql(source, delimiter) {
+    var pieces = [];
+    var start = 0;
+    var inString = false;
+    var inUri = false;
+    var escaped = false;
+    var index;
+    var ch;
+
+    for (index = 0; index < source.length; index += 1) {
+      ch = source.charAt(index);
+
+      if (inString) {
+        if (escaped) {
+          escaped = false;
+        } else if (ch === '\\') {
+          escaped = true;
+        } else if (ch === '"') {
+          inString = false;
+        }
+        continue;
+      }
+
+      if (inUri) {
+        if (ch === '>') {
+          inUri = false;
+        }
+        continue;
+      }
+
+      if (ch === '"') {
+        inString = true;
+        continue;
+      }
+      if (ch === '<') {
+        inUri = true;
+        continue;
+      }
+      if (ch === delimiter) {
+        pieces.push(source.slice(start, index));
+        start = index + 1;
+      }
+    }
+
+    pieces.push(source.slice(start));
+    return pieces;
+  }
+
+  function tokenizeSparql(source) {
+    var tokens = [];
+    var index = 0;
+    var ch;
+    var start;
+    var escaped;
+
+    while (index < source.length) {
+      ch = source.charAt(index);
+
+      if (/\s/.test(ch)) {
+        index += 1;
+        continue;
+      }
+
+      if (ch === '<') {
+        start = index;
+        index += 1;
+        while (index < source.length && source.charAt(index) !== '>') {
+          index += 1;
+        }
+        tokens.push(source.slice(start, Math.min(index + 1, source.length)));
+        index += 1;
+        continue;
+      }
+
+      if (ch === '"') {
+        start = index;
+        index += 1;
+        escaped = false;
+        while (index < source.length) {
+          ch = source.charAt(index);
+          if (escaped) {
+            escaped = false;
+          } else if (ch === '\\') {
+            escaped = true;
+          } else if (ch === '"') {
+            index += 1;
+            break;
+          }
+          index += 1;
+        }
+        if (source.charAt(index) === '@') {
+          index += 1;
+          while (index < source.length && /[A-Za-z0-9-]/.test(source.charAt(index))) {
+            index += 1;
+          }
+        } else if (source.slice(index, index + 2) === '^^') {
+          index += 2;
+          if (source.charAt(index) === '<') {
+            while (index < source.length && source.charAt(index) !== '>') {
+              index += 1;
+            }
+            index += 1;
+          } else {
+            while (index < source.length && /[^\s;,.{}()]/.test(source.charAt(index))) {
+              index += 1;
+            }
+          }
+        }
+        tokens.push(source.slice(start, index));
+        continue;
+      }
+
+      if (';,.{}()'.indexOf(ch) !== -1) {
+        tokens.push(ch);
+        index += 1;
+        continue;
+      }
+
+      start = index;
+      while (index < source.length && /[^\s;,.{}()]/.test(source.charAt(index))) {
+        index += 1;
+      }
+      tokens.push(source.slice(start, index));
+    }
+
+    return tokens;
+  }
+
+  function decodeSparqlString(value) {
+    return String(value || '')
+      .replace(/^"/, '')
+      .replace(/"(?:@[-A-Za-z0-9]+|\^\^.+)?$/, '')
+      .replace(/\\"/g, '"')
+      .replace(/\\n/g, '\n')
+      .replace(/\\t/g, '\t')
+      .replace(/\\\\/g, '\\');
+  }
+
+  function parseSparqlTerm(token, prefixes) {
+    var text = String(token || '').trim();
+    var prefixedMatch;
+    var literalMatch;
+    var datatypeToken;
+    var datatype;
+
+    if (!text) {
+      throw new Error('Empty SPARQL term.');
+    }
+
+    if (text.charAt(0) === '?') {
+      return {
+        type: 'variable',
+        name: text.slice(1)
+      };
+    }
+
+    if (text === 'a') {
+      return {
+        type: 'uri',
+        value: SPARQL_PREFIX_URIS.rdf + 'type'
+      };
+    }
+
+    if (text.charAt(0) === '<' && text.charAt(text.length - 1) === '>') {
+      return {
+        type: 'uri',
+        value: text.slice(1, -1)
+      };
+    }
+
+    if (text.charAt(0) === '"') {
+      literalMatch = text.match(/^"[\s\S]*?"(?:@([A-Za-z0-9-]+)|\^\^(.+))?$/);
+      datatypeToken = literalMatch && literalMatch[2] ? literalMatch[2] : '';
+      datatype = '';
+      if (datatypeToken) {
+        datatype = parseSparqlTerm(datatypeToken, prefixes).value || '';
+      }
+      return {
+        type: 'literal',
+        value: decodeSparqlString(text),
+        language: literalMatch && literalMatch[1] ? literalMatch[1] : '',
+        datatype: datatype
+      };
+    }
+
+    prefixedMatch = text.match(/^([A-Za-z][A-Za-z0-9_-]*):(.+)$/);
+    if (prefixedMatch && prefixes[prefixedMatch[1]]) {
+      return {
+        type: 'uri',
+        value: prefixes[prefixedMatch[1]] + prefixedMatch[2]
+      };
+    }
+
+    throw new Error('Unsupported SPARQL term: ' + text);
+  }
+
+  function parseSparqlValues(valueText, prefixes) {
+    return tokenizeSparql(valueText).filter(function (token) {
+      return token !== '(' && token !== ')' && token !== ',';
+    }).map(function (token) {
+      return parseSparqlTerm(token, prefixes);
+    });
+  }
+
+  function parseSparqlTripleStatements(body, prefixes) {
+    var patterns = [];
+
+    splitOutsideSparql(body, '.').forEach(function (statement) {
+      var cleanStatement = statement.trim();
+      var subjectTerm;
+
+      if (!cleanStatement) {
+        return;
+      }
+
+      splitOutsideSparql(cleanStatement, ';').forEach(function (segment, segmentIndex) {
+        var tokens = tokenizeSparql(segment);
+        var predicateTerm;
+        var objectText;
+
+        if (!tokens.length) {
+          return;
+        }
+
+        if (segmentIndex === 0) {
+          if (tokens.length < 3) {
+            throw new Error('Invalid triple pattern: ' + segment.trim());
+          }
+          subjectTerm = parseSparqlTerm(tokens[0], prefixes);
+          predicateTerm = parseSparqlTerm(tokens[1], prefixes);
+          objectText = tokens.slice(2).join(' ');
+        } else {
+          if (!subjectTerm || tokens.length < 2) {
+            throw new Error('Invalid semicolon triple pattern: ' + segment.trim());
+          }
+          predicateTerm = parseSparqlTerm(tokens[0], prefixes);
+          objectText = tokens.slice(1).join(' ');
+        }
+
+        splitOutsideSparql(objectText, ',').forEach(function (objectPart) {
+          var objectTokens = tokenizeSparql(objectPart);
+          if (objectTokens.length !== 1) {
+            throw new Error('Use one object term per triple pattern: ' + objectPart.trim());
+          }
+          patterns.push({
+            subject: subjectTerm,
+            predicate: predicateTerm,
+            object: parseSparqlTerm(objectTokens[0], prefixes)
+          });
+        });
+      });
+    });
+
+    return patterns;
+  }
+
+  function extractSparqlFilters(body, prefixes) {
+    var filters = [];
+    var cleanBody = body;
+
+    cleanBody = cleanBody.replace(/FILTER\s*\(\s*LANGMATCHES\s*\(\s*LANG\s*\(\s*(\?[A-Za-z_][A-Za-z0-9_]*)\s*\)\s*,\s*("[^"]*"|\?[A-Za-z_][A-Za-z0-9_]*)\s*\)\s*\)/gi, function (match, variableToken, operandToken) {
+      filters.push({
+        type: 'langmatches',
+        variable: variableToken.slice(1),
+        operand: parseSparqlTerm(operandToken, prefixes)
+      });
+      return '\n';
+    });
+
+    cleanBody = cleanBody.replace(/FILTER\s*\(\s*LANG\s*\(\s*(\?[A-Za-z_][A-Za-z0-9_]*)\s*\)\s*=\s*("[^"]*"|\?[A-Za-z_][A-Za-z0-9_]*)\s*\)/gi, function (match, variableToken, operandToken) {
+      filters.push({
+        type: 'lang',
+        variable: variableToken.slice(1),
+        operand: parseSparqlTerm(operandToken, prefixes)
+      });
+      return '\n';
+    });
+
+    cleanBody = cleanBody.replace(/FILTER\s*\(\s*(\?[A-Za-z_][A-Za-z0-9_]*)\s*=\s*("[^"]*"(?:@[A-Za-z0-9-]+)?|<[^>]+>|[A-Za-z][A-Za-z0-9_-]*:[^\s)]+|\?[A-Za-z_][A-Za-z0-9_]*)\s*\)/gi, function (match, variableToken, operandToken) {
+      filters.push({
+        type: 'equals',
+        variable: variableToken.slice(1),
+        operand: parseSparqlTerm(operandToken, prefixes)
+      });
+      return '\n';
+    });
+
+    return {
+      body: cleanBody,
+      filters: filters
+    };
+  }
+
+  function parseSparqlGraphBlock(body, prefixes) {
+    var values = [];
+    var filterResult = extractSparqlFilters(body, prefixes);
+    var cleanBody = filterResult.body;
+
+    cleanBody = cleanBody.replace(/VALUES\s+(\?[A-Za-z_][A-Za-z0-9_]*)\s*\{([^}]*)\}/gi, function (match, variableToken, valueText) {
+      values.push({
+        variable: variableToken.slice(1),
+        terms: parseSparqlValues(valueText, prefixes)
+      });
+      return '\n';
+    });
+
+    return {
+      values: values,
+      filters: filterResult.filters,
+      patterns: parseSparqlTripleStatements(cleanBody, prefixes)
+    };
+  }
+
+  function parseSparqlSelect(queryText) {
+    var source = stripSparqlComments(queryText);
+    var prefixes = cloneSparqlPrefixes();
+    var prefixRegex = /^\s*PREFIX\s+([A-Za-z][A-Za-z0-9_-]*):\s*<([^>]+)>/gim;
+    var match;
+    var withoutPrefixes;
+    var selectMatch;
+    var selectedVariables;
+    var whereMatch;
+    var openBraceIndex;
+    var closeBraceIndex;
+    var whereBody;
+    var tail;
+    var orderMatch;
+    var limitMatch;
+    var optionals = [];
+    var mainBody;
+
+    while ((match = prefixRegex.exec(source))) {
+      prefixes[match[1]] = match[2];
+    }
+
+    withoutPrefixes = source.replace(prefixRegex, '');
+    selectMatch = withoutPrefixes.match(/\bSELECT\s+([\s\S]*?)\bWHERE\b/i);
+    if (!selectMatch) {
+      throw new Error('Only SELECT ... WHERE queries are supported in this local runner.');
+    }
+
+    selectedVariables = compactText(selectMatch[1]) === '*'
+      ? ['*']
+      : (selectMatch[1].match(/\?[A-Za-z_][A-Za-z0-9_]*/g) || []).map(function (name) {
+        return name.slice(1);
+      });
+
+    if (!selectedVariables.length) {
+      throw new Error('Select at least one variable, for example SELECT ?pose ?asanaLabel.');
+    }
+
+    whereMatch = /\bWHERE\s*\{/i.exec(withoutPrefixes);
+    if (!whereMatch) {
+      throw new Error('Missing WHERE block.');
+    }
+
+    openBraceIndex = withoutPrefixes.indexOf('{', whereMatch.index);
+    closeBraceIndex = findMatchingBrace(withoutPrefixes, openBraceIndex);
+    if (closeBraceIndex === -1) {
+      throw new Error('The WHERE block is missing a closing brace.');
+    }
+
+    whereBody = withoutPrefixes.slice(openBraceIndex + 1, closeBraceIndex);
+    tail = withoutPrefixes.slice(closeBraceIndex + 1);
+    orderMatch = tail.match(/\bORDER\s+BY\s+((?:\?[A-Za-z_][A-Za-z0-9_]*\s*)+)/i);
+    limitMatch = tail.match(/\bLIMIT\s+(\d+)/i);
+
+    mainBody = whereBody.replace(/OPTIONAL\s*\{([\s\S]*?)\}/gi, function (optionalMatch, optionalBody) {
+      optionals.push(parseSparqlGraphBlock(optionalBody, prefixes));
+      return '\n';
+    });
+
+    return {
+      prefixes: prefixes,
+      select: selectedVariables,
+      main: parseSparqlGraphBlock(mainBody, prefixes),
+      optionals: optionals,
+      orderBy: orderMatch
+        ? (orderMatch[1].match(/\?[A-Za-z_][A-Za-z0-9_]*/g) || []).map(function (name) {
+          return name.slice(1);
+        })
+        : [],
+      limit: limitMatch ? Math.max(0, Number(limitMatch[1])) : SPARQL_RESULT_LIMIT
+    };
+  }
+
+  function tripleTermForPosition(triple, position) {
+    if (position === 'subject') {
+      return {
+        termType: 'NamedNode',
+        value: triple.subject
+      };
+    }
+    if (position === 'predicate') {
+      return {
+        termType: 'NamedNode',
+        value: triple.predicate
+      };
+    }
+    return triple.object;
+  }
+
+  function termMatchesFixed(patternTerm, actualTerm) {
+    if (!patternTerm || !actualTerm) {
+      return false;
+    }
+    if (patternTerm.type === 'uri') {
+      return actualTerm.termType === 'NamedNode' && actualTerm.value === patternTerm.value;
+    }
+    if (patternTerm.type === 'literal') {
+      return actualTerm.termType === 'Literal' &&
+        actualTerm.value === patternTerm.value &&
+        (!patternTerm.language || normalizeToken(actualTerm.language) === normalizeToken(patternTerm.language)) &&
+        (!patternTerm.datatype || actualTerm.datatype === patternTerm.datatype);
+    }
+    return false;
+  }
+
+  function bindPatternTerm(binding, patternTerm, actualTerm) {
+    var existing;
+
+    if (patternTerm.type !== 'variable') {
+      return termMatchesFixed(patternTerm, actualTerm) ? binding : null;
+    }
+
+    existing = binding[patternTerm.name];
+    if (existing) {
+      return termsEqual(existing, actualTerm) ? binding : null;
+    }
+
+    binding = Object.assign({}, binding);
+    binding[patternTerm.name] = actualTerm;
+    return binding;
+  }
+
+  function termsEqual(left, right) {
+    return Boolean(left && right) &&
+      left.termType === right.termType &&
+      left.value === right.value &&
+      (left.language || '') === (right.language || '') &&
+      (left.datatype || '') === (right.datatype || '');
+  }
+
+  function resolveFilterOperand(operand, binding) {
+    if (!operand) {
+      return null;
+    }
+    if (operand.type === 'variable') {
+      return binding[operand.name] || null;
+    }
+    if (operand.type === 'uri') {
+      return {
+        termType: 'NamedNode',
+        value: operand.value
+      };
+    }
+    return {
+      termType: 'Literal',
+      value: operand.value,
+      language: operand.language || '',
+      datatype: operand.datatype || ''
+    };
+  }
+
+  function getTermLexicalValue(term) {
+    return term ? String(term.value || '') : '';
+  }
+
+  function evaluateSparqlFilter(filter, binding) {
+    var leftTerm = binding[filter.variable];
+    var rightTerm = resolveFilterOperand(filter.operand, binding);
+    var language;
+    var expected;
+
+    if (!leftTerm || !rightTerm) {
+      return false;
+    }
+
+    if (filter.type === 'lang' || filter.type === 'langmatches') {
+      language = normalizeToken(leftTerm.language);
+      expected = normalizeToken(getTermLexicalValue(rightTerm));
+      if (filter.type === 'langmatches' && expected === '*') {
+        return Boolean(language);
+      }
+      return language === expected;
+    }
+
+    if (filter.type === 'equals') {
+      if (leftTerm.termType === 'NamedNode' || rightTerm.termType === 'NamedNode') {
+        return leftTerm.termType === rightTerm.termType && leftTerm.value === rightTerm.value;
+      }
+      return leftTerm.value === rightTerm.value;
+    }
+
+    return true;
+  }
+
+  function applySparqlValues(bindings, values) {
+    var output = bindings.slice();
+
+    values.forEach(function (valueSet) {
+      var next = [];
+      output.forEach(function (binding) {
+        valueSet.terms.forEach(function (termPattern) {
+          var term = resolveFilterOperand(termPattern, binding);
+          var updated = Object.assign({}, binding);
+          updated[valueSet.variable] = term;
+          next.push(updated);
+        });
+      });
+      output = next;
+    });
+
+    return output;
+  }
+
+  function matchSparqlPatterns(bindings, patterns, triples) {
+    var output = bindings.slice();
+
+    patterns.forEach(function (pattern) {
+      var next = [];
+      output.forEach(function (binding) {
+        triples.forEach(function (triple) {
+          var candidate = Object.assign({}, binding);
+          candidate = bindPatternTerm(candidate, pattern.subject, tripleTermForPosition(triple, 'subject'));
+          if (!candidate) {
+            return;
+          }
+          candidate = bindPatternTerm(candidate, pattern.predicate, tripleTermForPosition(triple, 'predicate'));
+          if (!candidate) {
+            return;
+          }
+          candidate = bindPatternTerm(candidate, pattern.object, tripleTermForPosition(triple, 'object'));
+          if (!candidate) {
+            return;
+          }
+          next.push(candidate);
+        });
+      });
+      output = next;
+    });
+
+    return output;
+  }
+
+  function applySparqlGraphBlock(bindings, block, triples) {
+    var output = applySparqlValues(bindings, block.values || []);
+    output = matchSparqlPatterns(output, block.patterns || [], triples);
+    if (block.filters && block.filters.length) {
+      output = output.filter(function (binding) {
+        return block.filters.every(function (filter) {
+          return evaluateSparqlFilter(filter, binding);
+        });
+      });
+    }
+    return output;
+  }
+
+  function applySparqlOptionalBlock(bindings, block, triples) {
+    var output = [];
+
+    bindings.forEach(function (binding) {
+      var matches = applySparqlGraphBlock([binding], block, triples);
+      if (matches.length) {
+        output = output.concat(matches);
+      } else {
+        output.push(binding);
+      }
+    });
+
+    return output;
+  }
+
+  function compactSparqlUri(uri, prefixes) {
+    var orderedPrefixes = Object.keys(prefixes || {}).sort(function (left, right) {
+      return prefixes[right].length - prefixes[left].length;
+    });
+    var match = orderedPrefixes.find(function (prefix) {
+      return String(uri || '').indexOf(prefixes[prefix]) === 0;
+    });
+
+    if (match) {
+      return match + ':' + String(uri).slice(prefixes[match].length);
+    }
+
+    return global.SNOntologyGraph && typeof global.SNOntologyGraph.prettifyIdentifier === 'function'
+      ? global.SNOntologyGraph.prettifyIdentifier(uri)
+      : String(uri || '');
+  }
+
+  function formatSparqlTerm(term, prefixes) {
+    if (!term) {
+      return '';
+    }
+    if (term.termType === 'NamedNode') {
+      return compactSparqlUri(term.value, prefixes);
+    }
+    if (term.language) {
+      return term.value + ' @' + term.language;
+    }
+    return term.value;
+  }
+
+  function getSparqlSortValue(term) {
+    var value = term ? String(term.value || '') : '';
+    var numeric = Number(value);
+    return value !== '' && !Number.isNaN(numeric) ? numeric : value.toLowerCase();
+  }
+
+  function executeSparqlSelect(model, queryText) {
+    var parsed = parseSparqlSelect(queryText);
+    var triples = model && model.triples ? model.triples : [];
+    var bindings = [{}];
+    var selectedVariables;
+    var rows;
+    var effectiveLimit = parsed.limit || SPARQL_RESULT_LIMIT;
+
+    bindings = applySparqlGraphBlock(bindings, parsed.main, triples);
+    parsed.optionals.forEach(function (optionalBlock) {
+      bindings = applySparqlOptionalBlock(bindings, optionalBlock, triples);
+    });
+
+    if (parsed.orderBy.length) {
+      bindings.sort(function (left, right) {
+        var index;
+        var leftValue;
+        var rightValue;
+        for (index = 0; index < parsed.orderBy.length; index += 1) {
+          leftValue = getSparqlSortValue(left[parsed.orderBy[index]]);
+          rightValue = getSparqlSortValue(right[parsed.orderBy[index]]);
+          if (leftValue < rightValue) return -1;
+          if (leftValue > rightValue) return 1;
+        }
+        return 0;
+      });
+    }
+
+    if (parsed.select.length === 1 && parsed.select[0] === '*') {
+      selectedVariables = [];
+      bindings.forEach(function (binding) {
+        Object.keys(binding).forEach(function (variable) {
+          if (selectedVariables.indexOf(variable) === -1) {
+            selectedVariables.push(variable);
+          }
+        });
+      });
+    } else {
+      selectedVariables = parsed.select;
+    }
+
+    rows = bindings.slice(0, effectiveLimit).map(function (binding) {
+      return selectedVariables.map(function (variable) {
+        return formatSparqlTerm(binding[variable], parsed.prefixes);
+      });
+    });
+
+    return {
+      variables: selectedVariables,
+      rows: rows,
+      totalRows: bindings.length,
+      returnedRows: rows.length,
+      capped: bindings.length > effectiveLimit,
+      limit: effectiveLimit
+    };
   }
 
   function hashString(value) {
@@ -517,7 +1272,7 @@
   }
 
   function setWorkspaceMode(state, mode) {
-    var activeMode = mode === 'custom' ? 'custom' : 'predefined';
+    var activeMode = mode === 'custom' || mode === 'sparql' ? mode : 'predefined';
     var previousMode = state.workspaceMode;
 
     state.workspaceMode = activeMode;
@@ -534,12 +1289,20 @@
       state.predefinedModeButton.setAttribute('aria-pressed', activeMode === 'predefined' ? 'true' : 'false');
     }
 
+    if (state.sparqlModeButton) {
+      state.sparqlModeButton.setAttribute('aria-pressed', activeMode === 'sparql' ? 'true' : 'false');
+    }
+
     if (state.nlInterface) {
       state.nlInterface.style.display = activeMode === 'custom' ? 'grid' : 'none';
     }
 
     if (state.predefinedInterface) {
       state.predefinedInterface.style.display = activeMode === 'predefined' ? 'grid' : 'none';
+    }
+
+    if (state.sparqlInterface) {
+      state.sparqlInterface.style.display = activeMode === 'sparql' ? 'grid' : 'none';
     }
 
     if (previousMode === activeMode) {
@@ -558,6 +1321,13 @@
           visualNote: 'Linked CYP visuals for the custom query will appear here when the query returns mapped pages.'
         });
         setAnswerView(state, 'answer');
+      }
+      return;
+    }
+
+    if (activeMode === 'sparql') {
+      if (state.sparqlEditor && !compactText(state.sparqlEditor.value)) {
+        state.sparqlEditor.value = buildDefaultSparqlQuery(state);
       }
       return;
     }
@@ -701,6 +1471,87 @@
       renderTable(state, state.sections, answer.table);
     }
     state.sections.hidden = !state.sections.children.length;
+  }
+
+  function setSparqlError(state, message) {
+    if (!state.sparqlError) {
+      return;
+    }
+    state.sparqlError.hidden = !message;
+    state.sparqlError.textContent = message || '';
+  }
+
+  function clearSparqlResults(state) {
+    clearElement(state.sparqlFacts);
+    clearElement(state.sparqlSections);
+    if (state.sparqlSections) {
+      state.sparqlSections.hidden = true;
+    }
+    if (state.sparqlEmpty) {
+      state.sparqlEmpty.hidden = false;
+      state.sparqlEmpty.textContent = 'Results from the direct SPARQL editor will appear here.';
+    }
+    if (state.sparqlResultsTitle) {
+      state.sparqlResultsTitle.textContent = 'Run a query';
+    }
+    if (state.sparqlResultNote) {
+      state.sparqlResultNote.textContent = 'Local OWL evaluation';
+    }
+    setSparqlError(state, '');
+  }
+
+  function renderSparqlResult(state, result) {
+    var previousFacts = state.facts;
+    var previousSections = state.sections;
+    var table;
+
+    if (!result) {
+      clearSparqlResults(state);
+      return;
+    }
+
+    if (state.sparqlResultsTitle) {
+      state.sparqlResultsTitle.textContent = result.returnedRows + ' result' +
+        (result.returnedRows === 1 ? '' : 's');
+    }
+
+    if (state.sparqlResultNote) {
+      state.sparqlResultNote.textContent = result.capped
+        ? 'Showing first ' + result.returnedRows + ' of ' + result.totalRows + ' rows'
+        : 'Returned ' + result.returnedRows + ' row' + (result.returnedRows === 1 ? '' : 's');
+    }
+
+    if (state.sparqlEmpty) {
+      state.sparqlEmpty.hidden = result.returnedRows > 0;
+      state.sparqlEmpty.textContent = result.returnedRows
+        ? ''
+        : 'The query ran successfully, but no matching triples were found.';
+    }
+
+    state.facts = state.sparqlFacts;
+    renderFacts(state, [
+      { label: 'Rows', value: String(result.returnedRows) },
+      { label: 'Variables', value: String(result.variables.length) },
+      { label: 'Limit', value: String(result.limit) }
+    ]);
+    state.facts = previousFacts;
+
+    clearElement(state.sparqlSections);
+    if (result.returnedRows > 0) {
+      table = {
+        columns: result.variables.map(function (variable) {
+          return '?' + variable;
+        }),
+        rows: result.rows
+      };
+      state.sections = state.sparqlSections;
+      renderSections(state, { table: table });
+      state.sections = previousSections;
+    } else if (state.sparqlSections) {
+      state.sparqlSections.hidden = true;
+    }
+
+    setSparqlError(state, '');
   }
 
   function closeLightbox(state) {
@@ -1184,6 +2035,12 @@
         setWorkspaceMode(state, 'predefined');
       });
     }
+
+    if (state.sparqlModeButton) {
+      state.sparqlModeButton.addEventListener('click', function () {
+        setWorkspaceMode(state, 'sparql');
+      });
+    }
   }
 
   function syncLanguageSelects(state) {
@@ -1220,6 +2077,13 @@
       return;
     }
 
+    if (state.workspaceMode === 'sparql') {
+      if (state.sparqlEditor && !state.sparqlHasUserEdited) {
+        state.sparqlEditor.value = buildDefaultSparqlQuery(state);
+      }
+      return;
+    }
+
     if (state.model && state.lastPredefinedQuestionId) {
       renderQuestion(state, state.lastPredefinedQuestionId);
     }
@@ -1239,6 +2103,68 @@
         rerenderForLanguageChange(state);
       });
     });
+  }
+
+  function runDirectSparql(state) {
+    var queryText = state.sparqlEditor ? state.sparqlEditor.value : '';
+    var result;
+
+    if (!state.model) {
+      setSparqlError(state, 'The ontology is still loading. Try again after the page reports that the ontology is ready.');
+      return;
+    }
+
+    if (!compactText(queryText)) {
+      setSparqlError(state, 'Enter a SELECT query before running the SPARQL editor.');
+      return;
+    }
+
+    try {
+      result = executeSparqlSelect(state.model, queryText);
+      renderSparqlResult(state, result);
+    } catch (error) {
+      setSparqlError(state, error && error.message ? error.message : 'Unable to run the SPARQL query.');
+    }
+  }
+
+  function resetDirectSparql(state) {
+    if (state.sparqlEditor) {
+      state.sparqlEditor.value = buildDefaultSparqlQuery(state);
+      state.sparqlHasUserEdited = false;
+    }
+    clearSparqlResults(state);
+  }
+
+  function initializeSparqlWorkspace(state) {
+    if (!state.sparqlEditor) {
+      return;
+    }
+
+    state.sparqlEditor.value = buildDefaultSparqlQuery(state);
+    state.sparqlHasUserEdited = false;
+    clearSparqlResults(state);
+
+    state.sparqlEditor.addEventListener('input', function () {
+      state.sparqlHasUserEdited = true;
+    });
+
+    if (state.sparqlRunButton) {
+      state.sparqlRunButton.addEventListener('click', function () {
+        runDirectSparql(state);
+      });
+    }
+
+    if (state.sparqlResetButton) {
+      state.sparqlResetButton.addEventListener('click', function () {
+        resetDirectSparql(state);
+      });
+    }
+
+    if (state.sparqlClearButton) {
+      state.sparqlClearButton.addEventListener('click', function () {
+        clearSparqlResults(state);
+      });
+    }
   }
 
   function initializeAISuggestions(state) {
@@ -1589,6 +2515,7 @@
       predefinedPanel: byId('education-predefined-panel'),
       customModeButton: byId('education-mode-custom'),
       predefinedModeButton: byId('education-mode-predefined'),
+      sparqlModeButton: byId('education-mode-sparql'),
       answerPanel: document.querySelector('.education-answer-panel'),
       error: byId('education-error'),
       activeQuestionId: byId('education-active-question-id'),
@@ -1609,6 +2536,7 @@
       aiExplainButton: byId('education-ai-explain'),
       nlInterface: byId('nl-interface-wrapper'),
       predefinedInterface: byId('predefined-interface-wrapper'),
+      sparqlInterface: byId('sparql-interface-wrapper'),
       nlStateWelcome: byId('nl-state-welcome'),
       nlStateSparql: byId('nl-state-sparql'),
       nlStateResults: byId('nl-state-results'),
@@ -1622,6 +2550,16 @@
       nlExplanationBody: byId('education-nl-explanation-body'),
       nlExplanationText: byId('education-nl-explanation-text'),
       nlError: byId('education-nl-error'),
+      sparqlEditor: byId('education-sparql-editor'),
+      sparqlRunButton: byId('education-sparql-run'),
+      sparqlResetButton: byId('education-sparql-reset'),
+      sparqlClearButton: byId('education-sparql-clear'),
+      sparqlError: byId('education-sparql-error'),
+      sparqlFacts: byId('education-sparql-facts'),
+      sparqlSections: byId('education-sparql-sections'),
+      sparqlEmpty: byId('education-sparql-empty'),
+      sparqlResultsTitle: byId('education-sparql-results-title'),
+      sparqlResultNote: byId('education-sparql-result-note'),
       runtimeStatusCard: byId('education-runtime-status'),
       runtimeTemplateCard: byId('education-runtime-template'),
       runtimeResultCard: byId('education-runtime-result'),
@@ -1635,6 +2573,7 @@
       aiExecution: null,
       aiExplained: false,
       aiExplanationLoading: false,
+      sparqlHasUserEdited: false,
       asanaThemeMap: {},
       asanaThemeMapInitialized: false,
       variantThemeMap: {},
@@ -1650,6 +2589,7 @@
     initializeAnswerViewToggle(state);
     initializeWorkspaceModeToggle(state);
     initializeLanguageControls(state);
+    initializeSparqlWorkspace(state);
     initializeAIWorkspace(state);
     setAnswerView(state, 'answer');
     setWorkspaceMode(state, 'predefined');

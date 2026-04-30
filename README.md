@@ -14,7 +14,7 @@ The explorer is built as a static web application and runs directly in the brows
 - Provides predefined SPARQL-backed competency questions for Surya Namaskar sequences, variants, asanas, mantras, chakras, body parts, breathing patterns, safety notes, and correction guidance.
 - Supports a Natural Language tab for mapping supported yoga questions to ontology-aware SPARQL templates.
 - Displays generated SPARQL alongside the retrieved ontology results.
-- Includes Hindi and Telugu asana label selection for result tables and generated queries.
+- Includes localized asana label selection for result tables and generated queries.
 - Grounds pose and asana results with Common Yoga Protocol page images where available.
 - Uses the SN-YO ontology as its knowledge source.
 

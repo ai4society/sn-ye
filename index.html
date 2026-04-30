@@ -9,7 +9,7 @@
     content="Surya Namaskar explorer workspace with ontology-grounded answers and visual references."
   />
   <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="css/explorer.css?v=te_breathing_v4" />
+  <link rel="stylesheet" href="css/explorer.css?v=sparql_v1" />
 </head>
 <body class="education-page education-body education-body--workspace">
   <div class="container education-container education-container--workspace">
@@ -17,7 +17,7 @@
       <section
         class="visible education-workspace education-workspace--page"
         data-education-app
-        data-ontology-src="models/master.owl?v=te_breathing_v4"
+        data-ontology-src="models/master.owl?v=sparql_v1"
         data-cyp-image-base="images/cyp-pages"
       >
         <div class="education-workspace-shell">
@@ -28,11 +28,28 @@
                 This is a tool to explore Surya Namaskar (SN), or Sun Salutation, which is a set of choreographed asanas from Yoga. The tool is powered by making queries on the <a class="education-inline-home-link" href="https://ai4society.github.io/sn-yo/" target="_blank" rel="noopener noreferrer">SN-YO</a> ontology.
               </p>
               <p class="education-panel-copy education-workspace-reference">
-                Image Credit: all visual references in the tool are taken from
+                <strong class="education-credit-heading">Image Credit:</strong> all visual references in the tool are taken from
                 <a href="https://www.yogamdniy.nic.in/ckfinder/userfiles/files/Common%20Yoga%20Protocol%20Book%20_%20English%20(1).pdf" target="_blank" rel="noopener noreferrer">
-                  <span class="keyword-highlight"><em>Common Yoga Protocol</em></span> (English), Ministry of Ayush, Government of India
+                  <span class="keyword-highlight"><em>Common Yoga Protocol</em></span> <strong>(English), Ministry of Ayush, Government of India</strong>
                 </a>.
               </p>
+              <div class="education-feature-strip" aria-label="SN-YE feature overview">
+                <article class="education-feature-card">
+                  <span>Try queries</span>
+                  <strong>Predefined, SPARQL, or Natural Language</strong>
+                  <p>Start from validated competency questions, write SPARQL directly, or ask supported questions through Gemini-assisted templates.</p>
+                </article>
+                <article class="education-feature-card">
+                  <span>Inspect evidence</span>
+                  <strong>Ontology facts and source queries</strong>
+                  <p>Review retrieved rows, generated SPARQL, linked asanas, breathing annotations, safety notes, and visual references.</p>
+                </article>
+                <article class="education-feature-card">
+                  <span>Language</span>
+                  <strong>Localized asana labels</strong>
+                  <p>Use the Language selector to add available non-English asana labels to predefined and natural-language results.</p>
+                </article>
+              </div>
             </div>
           </header>
 
@@ -55,6 +72,15 @@
                 aria-pressed="true"
               >
                 Natural Language
+              </button>
+              <button
+                type="button"
+                class="education-workspace-switch-button"
+                id="education-mode-sparql"
+                data-workspace-mode="sparql"
+                aria-pressed="false"
+              >
+                SPARQL
               </button>
             </div>
             <div class="education-language-control education-language-control--toolbar">
@@ -224,6 +250,161 @@
 
             </div>
 
+            <!-- SPARQL Query Layout -->
+            <div id="sparql-interface-wrapper" class="education-layout" data-mode="sparql" style="display: none;">
+              <aside class="education-questions-column">
+                <div class="education-panel education-sparql-guide-panel">
+                  <div class="education-panel-header">
+                    <div>
+                      <p class="education-kicker">SPARQL Workspace</p>
+                      <h2>Write Direct Ontology Queries</h2>
+                    </div>
+                  </div>
+
+                  <p class="education-panel-copy">
+                    The local runner supports browser-side SELECT queries over the loaded SN-YO OWL file. Use prefixes, triple patterns, OPTIONAL blocks, VALUES, LANG filters, ORDER BY, and LIMIT for focused exploration.
+                  </p>
+
+                  <div class="education-uri-grid" aria-label="Ontology URI reference">
+                    <div><span>core</span><code>http://example.org/suryanamaskar/core#</code></div>
+                    <div><span>base</span><code>http://example.org/suryanamaskar/base-sn#</code></div>
+                    <div><span>v1</span><code>http://example.org/suryanamaskar/variant01#</code></div>
+                    <div><span>v2</span><code>http://example.org/suryanamaskar/variant02#</code></div>
+                    <div><span>v3</span><code>http://example.org/suryanamaskar/variant03#</code></div>
+                  </div>
+
+                  <div class="education-sparql-hints" aria-label="Useful ontology terms">
+                    <span>core:Pose</span>
+                    <span>core:Asana</span>
+                    <span>core:Variant</span>
+                    <span>core:hasAsana</span>
+                    <span>core:poseNumber</span>
+                    <span>core:hasBreathingPattern</span>
+                    <span>core:hasSafetyNote</span>
+                  </div>
+                </div>
+
+                <div class="education-panel education-sparql-editor-panel">
+                  <div class="education-panel-header education-panel-header--spread">
+                    <div>
+                      <p class="education-kicker">Query Editor</p>
+                      <h2>SPARQL SELECT</h2>
+                    </div>
+                    <button type="button" class="education-inline-button education-inline-button--ghost" id="education-sparql-reset">Reset Prefixes</button>
+                  </div>
+
+                  <textarea
+                    id="education-sparql-editor"
+                    class="education-composer-input education-sparql-editor"
+                    rows="16"
+                    spellcheck="false"
+                    aria-label="SPARQL query editor"
+                  ></textarea>
+
+                  <div class="education-composer-actions education-sparql-actions" aria-label="SPARQL query actions">
+                    <button type="button" class="education-composer-button education-composer-button--primary" id="education-sparql-run">Run SPARQL</button>
+                    <button type="button" class="education-composer-button education-composer-button--ghost" id="education-sparql-clear">Clear Results</button>
+                  </div>
+                  <div id="education-sparql-error" class="education-error" hidden></div>
+                </div>
+              </aside>
+
+              <div class="education-response-column">
+                <div class="education-panel education-answer-panel education-sparql-results-panel">
+                  <div class="education-panel-header education-panel-header--spread">
+                    <div>
+                      <p class="education-kicker">SPARQL Results</p>
+                      <h2 id="education-sparql-results-title">Run a query</h2>
+                    </div>
+                    <span class="education-query-note" id="education-sparql-result-note">Local OWL evaluation</span>
+                  </div>
+
+                  <p id="education-sparql-empty" class="education-panel-copy">
+                    Results from the direct SPARQL editor will appear here.
+                  </p>
+                  <div id="education-sparql-facts" class="education-facts" aria-label="SPARQL result facts"></div>
+                  <div id="education-sparql-sections" class="education-sections" aria-label="SPARQL result table"></div>
+                </div>
+              </div>
+
+              <div class="education-panel education-sparql-examples-panel">
+                <div class="education-panel-header">
+                  <div>
+                    <p class="education-kicker">Query Examples</p>
+                    <h2>SPARQL Templates for SN-YO</h2>
+                  </div>
+                </div>
+
+                <p class="education-panel-copy">
+                  Use these examples as starting points for direct ontology exploration. Paste one into the editor above after the prefix block, or adapt the variables and predicates for your own question.
+                </p>
+
+                <div class="education-sparql-example-grid">
+                  <details class="education-sparql-example-card">
+                    <summary>Base SN sequence with asanas and breathing</summary>
+                    <pre><code>SELECT ?pose ?poseNumber ?asanaLabel ?breathingLabel
+WHERE {
+  ?pose rdf:type core:Pose .
+  ?pose core:belongsToVariant base:BaseSN_SivanandaYogaVedantaCentre_UsedatIITBHU .
+  ?pose core:poseNumber ?poseNumber .
+  ?pose core:hasAsana ?asana .
+  ?asana rdfs:label ?asanaLabel .
+  FILTER(LANG(?asanaLabel) = "en")
+  OPTIONAL {
+    ?pose core:hasBreathingPattern ?breathing .
+    ?breathing rdfs:label ?breathingLabel .
+    FILTER(LANG(?breathingLabel) = "en")
+  }
+}
+ORDER BY ?poseNumber</code></pre>
+                  </details>
+
+                  <details class="education-sparql-example-card">
+                    <summary>Available asanas with localized labels</summary>
+                    <pre><code>SELECT ?asana ?englishLabel ?localizedLabel
+WHERE {
+  VALUES ?language { "hi" }
+  ?asana rdf:type core:Asana .
+  ?asana rdfs:label ?englishLabel .
+  FILTER(LANG(?englishLabel) = "en")
+  OPTIONAL {
+    ?asana rdfs:label ?localizedLabel .
+    FILTER(LANG(?localizedLabel) = ?language)
+  }
+}
+ORDER BY ?englishLabel</code></pre>
+                  </details>
+
+                  <details class="education-sparql-example-card">
+                    <summary>Safety notes in the base sequence</summary>
+                    <pre><code>SELECT ?poseNumber ?asanaLabel ?safetyNote
+WHERE {
+  ?pose rdf:type core:Pose .
+  ?pose core:belongsToVariant base:BaseSN_SivanandaYogaVedantaCentre_UsedatIITBHU .
+  ?pose core:poseNumber ?poseNumber .
+  ?pose core:hasAsana ?asana .
+  ?asana rdfs:label ?asanaLabel .
+  FILTER(LANG(?asanaLabel) = "en")
+  ?pose core:hasSafetyNote ?safetyNote .
+}
+ORDER BY ?poseNumber</code></pre>
+                  </details>
+
+                  <details class="education-sparql-example-card">
+                    <summary>Asanas with CYP visual references</summary>
+                    <pre><code>SELECT ?asana ?asanaLabel ?cypPage
+WHERE {
+  ?asana rdf:type core:Asana .
+  ?asana rdfs:label ?asanaLabel .
+  FILTER(LANG(?asanaLabel) = "en")
+  ?asana core:hasCYPPage ?cypPage .
+}
+ORDER BY ?cypPage</code></pre>
+                  </details>
+                </div>
+              </div>
+            </div>
+
             <!-- Predefined Questions Layout (Left questions, Right answers) -->
             <div id="predefined-interface-wrapper" class="education-layout" data-mode="predefined" style="display: none;">
               <aside class="education-questions-column">
@@ -330,9 +511,9 @@
     </figure>
   </div>
 
-  <script src="js/ontology-graph.js?v=te_breathing_v4"></script>
-  <script src="js/explorer-data.js?v=te_breathing_v4"></script>
-  <script src="js/explorer-ai.js?v=te_breathing_v4"></script>
-  <script src="js/explorer.js?v=te_breathing_v4"></script>
+  <script src="js/ontology-graph.js?v=sparql_v1"></script>
+  <script src="js/explorer-data.js?v=sparql_v1"></script>
+  <script src="js/explorer-ai.js?v=sparql_v1"></script>
+  <script src="js/explorer.js?v=sparql_v1"></script>
 </body>
 </html>

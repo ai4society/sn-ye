@@ -370,6 +370,44 @@
     return entity && entity.links[predicate] ? entity.links[predicate].slice() : [];
   }
 
+  function buildTriples(entities) {
+    var triples = [];
+
+    Object.keys(entities || {}).forEach(function (subjectUri) {
+      var entity = entities[subjectUri];
+
+      Object.keys(entity.links || {}).forEach(function (predicateUri) {
+        entity.links[predicateUri].forEach(function (objectUri) {
+          triples.push({
+            subject: subjectUri,
+            predicate: predicateUri,
+            object: {
+              termType: 'NamedNode',
+              value: objectUri
+            }
+          });
+        });
+      });
+
+      Object.keys(entity.literals || {}).forEach(function (predicateUri) {
+        entity.literals[predicateUri].forEach(function (literal) {
+          triples.push({
+            subject: subjectUri,
+            predicate: predicateUri,
+            object: {
+              termType: 'Literal',
+              value: literal.value,
+              datatype: literal.datatype || '',
+              language: literal.language || ''
+            }
+          });
+        });
+      });
+    });
+
+    return triples;
+  }
+
   function hasType(entity, typeUri) {
     return getLinkValues(entity, PREDICATES.type).indexOf(typeUri) !== -1;
   }
@@ -387,6 +425,7 @@
       ontologySrc: options.ontologySrc || DEFAULTS.ontologySrc,
       cypImageBase: options.cypImageBase || DEFAULTS.cypImageBase
     };
+    var triples = buildTriples(entities);
     var entityList = Object.keys(entities).map(function (uri) {
       return entities[uri];
     });
@@ -1116,6 +1155,7 @@
       predicates: PREDICATES,
       types: TYPES,
       entities: entities,
+      triples: triples,
       asanas: asanas,
         bodyParts: bodyParts,
         breathingPatterns: breathingPatterns,
