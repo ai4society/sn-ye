@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SN-YE | Surya Namaskar Yoga Explorer</title>
+  <meta
+    name="description"
+    content="Surya Namaskar explorer workspace with ontology-grounded answers and visual references."
+  />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/explorer.css?v=te_breathing_v4" />
+</head>
+<body class="education-page education-body education-body--workspace">
+  <div class="container education-container education-container--workspace">
+    <main class="content education-content education-content--workspace">
+      <section
+        class="visible education-workspace education-workspace--page"
+        data-education-app
+        data-ontology-src="models/master.owl?v=te_breathing_v4"
+        data-cyp-image-base="images/cyp-pages"
+      >
+        <div class="education-workspace-shell">
+          <header class="education-workspace-header">
+            <div class="education-workspace-heading">
+              <h1>SN-YE: A tool for Surya Namaskara - Yoga Exploration</h1>
+              <p class="education-panel-copy education-workspace-copy">
+                This is a tool to explore Surya Namaskar (SN), or Sun Salutation, which is a set of choreographed asanas from Yoga. The tool is powered by making queries on the <a class="education-inline-home-link" href="https://ai4society.github.io/sn-yo/" target="_blank" rel="noopener noreferrer">SN-YO</a> ontology.
+              </p>
+              <p class="education-panel-copy education-workspace-reference">
+                Image Credit: all visual references in the tool are taken from
+                <a href="https://www.yogamdniy.nic.in/ckfinder/userfiles/files/Common%20Yoga%20Protocol%20Book%20_%20English%20(1).pdf" target="_blank" rel="noopener noreferrer">
+                  <span class="keyword-highlight"><em>Common Yoga Protocol</em></span> (English), Ministry of Ayush, Government of India
+                </a>.
+              </p>
+            </div>
+          </header>
+
+          <div class="education-workspace-toolbar">
+            <div class="education-workspace-switch education-workspace-switch--page" role="tablist" aria-label="Workspace mode">
+              <button
+                type="button"
+                class="education-workspace-switch-button"
+                id="education-mode-predefined"
+                data-workspace-mode="predefined"
+                aria-pressed="false"
+              >
+                Predefined Questions
+              </button>
+              <button
+                type="button"
+                class="education-workspace-switch-button"
+                id="education-mode-custom"
+                data-workspace-mode="custom"
+                aria-pressed="true"
+              >
+                Natural Language
+              </button>
+            </div>
+            <div class="education-language-control education-language-control--toolbar">
+              <label class="education-composer-label" for="education-language-select">Language</label>
+              <select
+                id="education-language-select"
+                class="education-composer-select education-language-select"
+                data-education-language-select
+                name="education-language-select"
+              >
+                <option value="hi" selected>Hindi</option>
+                <option value="te">Telugu</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="education-layout-container">
+            
+            <!-- Natural Language Interface - Left/Right State Flow -->
+            <div id="nl-interface-wrapper" class="education-layout" data-mode="custom" style="display: none;">
+              
+              <!-- LEFT PANE: Composer -->
+              <aside class="education-questions-column" id="nl-interface-column">
+                <div class="education-panel education-composer-panel education-panel--workspace-column" id="education-composer-panel">
+                  <div class="education-panel-header education-panel-header--spread">
+                    <div>
+                      <p class="education-kicker">Natural Language Interface</p>
+                      <h2>Query the Knowledge Graph</h2>
+                    </div>
+                  </div>
+
+                  <p class="education-panel-copy">
+                    This framework interprets your natural language prompts and translates them into structured SPARQL queries against the Surya Namaskar Ontology. 
+                  </p>
+
+                  <form class="education-composer-form" id="education-ai-form" aria-label="Custom natural language question composer">
+                    <details class="education-config-panel">
+                      <summary class="education-config-summary">
+                        <span>Gemini API Key &amp; Model</span>
+                        <span class="education-config-summary-note">Required</span>
+                      </summary>
+                      <div class="education-config-panel-body">
+                        <div class="education-composer-config-grid">
+                          <div class="education-composer-field">
+                            <label class="education-composer-label" for="education-api-key">Gemini API key</label>
+                            <input
+                              id="education-api-key"
+                              class="education-composer-input education-composer-input--single-line"
+                              name="education-api-key"
+                              type="password"
+                              spellcheck="false"
+                              autocomplete="off"
+                              placeholder="Paste your Gemini API key"
+                            />
+                          </div>
+                          <div class="education-composer-field">
+                            <label class="education-composer-label" for="education-ai-model">Model</label>
+                            <select id="education-ai-model" class="education-composer-select" name="education-ai-model">
+                              <option value="gemma-4-31b-it" selected>Gemma 4 31B</option>
+                              <option value="gemma-4-26b-a4b-it">Gemma 4 26B</option>
+                              <option value="gemini-3.1-flash-lite-preview">Gemini 3.1 Flash-Lite Preview</option>
+                              <option value="gemini-3-flash-preview">Gemini 3 Flash Preview</option>
+                              <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                              <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    </details>
+
+                    <div class="education-label-row">
+                      <label class="education-composer-label" for="education-ai-question">Input prompt</label>
+                      <span class="education-info-popover">
+                        <button type="button" class="education-info-button" aria-label="API key info">i</button>
+                        <span class="education-info-tooltip" role="tooltip">
+                          A Gemini API key is required to generate SPARQL and the natural language explanation. Open the Gemini API Key &amp; Model section to add it.
+                        </span>
+                      </span>
+                    </div>
+                    <textarea
+                      id="education-ai-question"
+                      class="education-composer-input"
+                      name="education-ai-question"
+                      rows="4"
+                      spellcheck="false"
+                      placeholder="Type your natural language query here..."
+                    ></textarea>
+
+                    <div class="education-composer-actions" aria-label="Composer actions">
+                      <button type="button" class="education-composer-button education-composer-button--ghost" id="education-ai-clear">Clear</button>
+                      <button type="button" class="education-composer-button education-composer-button--primary" id="education-ai-generate">Send request</button>
+                    </div>
+                    <div id="education-nl-error" class="education-error" hidden style="margin-top: 16px; color: var(--text-color); background: rgba(255, 0, 0, 0.1); padding: 8px; border-radius: var(--radius-sm); border-left: 4px solid red;"></div>
+                  </form>
+                </div>
+              </aside>
+
+              <!-- RIGHT PANE: 3-State Display Flow -->
+              <div class="education-response-column">
+                
+                <!-- STATE 1: Welcome / Example Questions -->
+                <div id="nl-state-welcome" class="education-panel nl-state-panel" style="display: flex;">
+                  <div class="education-panel-header">
+                    <div>
+                      <p class="education-kicker">Getting Started</p>
+                      <h2>Example Queries</h2>
+                    </div>
+                  </div>
+                  <div class="education-panel-copy education-panel-copy--grow">
+                    <p>Select a model and enter a natural language prompt on the left to begin generating custom queries dynamically. If you're not sure where to start, try these tested examples:</p>
+                    <ul class="education-example-list">
+                      <li>"What are the different variants of SN?"</li>
+                      <li>"What is the ordered sequence of poses in the Base Surya Namaskar (Sivananda) variant?"</li>
+                      <li>"What rules and common errors are documented for Bhujangasana (Pose 7)?"</li>
+                      <li>"What breathing pattern and safety note are modeled for each Base SN pose?"</li>
+                      <li>"Which poses in Base SN carry mantra and chakra annotations?"</li>
+                      <li>"Compare the pose counts across all three variants (Base SN, V1, V2, V3)."</li>
+                      <li>"Which asanas are shared across multiple variants?"</li>
+                      <li>"What is the ordered pose sequence for V1 (Krishnamacharya)?"</li>
+                      <li>"Which poses exhibit inverse left/right laterality pairings?"</li>
+                      <li>"Which asanas have linked CYP (Common Yoga Protocol) visual references?"</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <!-- STATE 2: SPARQL Generation Review -->
+                <div id="nl-state-sparql" class="education-panel nl-state-panel" style="display: none;">
+                  <div class="education-panel-header education-panel-header--spread">
+                    <div>
+                      <p class="education-kicker">Generated SPARQL Query</p>
+                      <h2>Query Review</h2>
+                    </div>
+                    <button type="button" class="education-inline-button education-inline-button--primary" id="education-ai-run">Run Query</button>
+                  </div>
+                  <pre id="education-nl-sparql" class="education-code education-code--stretch"></pre>
+                </div>
+
+                <!-- STATE 3: Analysis & Results -->
+                <div id="nl-state-results" class="education-panel education-answer-panel nl-state-panel" style="display: none;">
+                  <div class="education-panel-header education-panel-header--spread">
+                    <div>
+                      <p class="education-kicker">Data Artifact</p>
+                      <h2>Execution Results</h2>
+                    </div>
+                    <button type="button" class="education-inline-button education-inline-button--ghost" id="nl-toggle-sparql">View SPARQL</button>
+                  </div>
+
+                  <div class="llm-explanation-box" id="education-nl-explanation" hidden>
+                    <div class="education-llm-heading">
+                      <strong>Explanation</strong>
+                      <span class="education-llm-dots" id="education-nl-explanation-loading" role="status" aria-label="Generating explanation" hidden>
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                      </span>
+                    </div>
+                    <div class="education-llm-copy" id="education-nl-explanation-body" hidden>
+                      <span id="education-nl-explanation-text"></span>
+                    </div>
+                  </div>
+
+                  <div class="education-facts" id="education-nl-facts" aria-label="Answer facts"></div>
+                  <div class="education-sections" id="education-nl-sections" aria-label="Answer details"></div>
+                </div>
+
+              </div>
+
+            </div>
+
+            <!-- Predefined Questions Layout (Left questions, Right answers) -->
+            <div id="predefined-interface-wrapper" class="education-layout" data-mode="predefined" style="display: none;">
+              <aside class="education-questions-column">
+                <div class="education-panel education-panel--fill education-panel--workspace-column" id="education-predefined-panel">
+                  <div class="education-panel-header">
+                    <div>
+                      <p class="education-kicker">Competency Questions</p>
+                      <h2>Select a Validated Query</h2>
+                    </div>
+                  </div>
+
+                  <p class="education-panel-copy">
+                    These predefined queries retrieve robust subgraph data and visually-grounded sources directly from the ontology.
+                  </p>
+
+                  <div id="education-question-list" class="education-question-list" aria-label="Suggested education questions"></div>
+                </div>
+              </aside>
+
+              <div class="education-response-column">
+                <div class="education-panel education-answer-panel">
+                  <div class="education-panel-header education-panel-header--spread">
+                    <div>
+                      <p class="education-kicker">Retrieved Data and Explanations</p>
+                      <h2 id="education-answer-title">Select a query...</h2>
+                    </div>
+                    <div class="education-answer-header-actions">
+                      <button
+                        type="button"
+                        class="education-answer-toggle"
+                        id="education-answer-view-toggle"
+                        aria-pressed="false"
+                      >
+                        Show Ontology Data Object
+                      </button>
+                      <span class="education-question-id" id="education-active-question-id">-</span>
+                    </div>
+                  </div>
+
+                  <div class="education-answer-scroll" id="education-answer-content">
+                    <p id="education-answer-text" class="education-answer-lede"></p>
+                    <div id="education-facts" class="education-facts" aria-label="Answer facts"></div>
+                    <div id="education-sections" class="education-sections" aria-label="Answer details"></div>
+                    <div id="education-error" class="education-error" hidden></div>
+                  </div>
+
+                  <div class="education-query-view" id="education-query-view" hidden>
+                    <div class="education-query-box">
+                      <div class="education-query-box-header">
+                        <p class="education-kicker">Source SPARQL Template</p>
+                        <div class="education-query-actions">
+                          <span class="education-query-note" id="education-query-note">Local evaluation</span>
+                        </div>
+                      </div>
+                      <pre id="education-sparql" class="education-code"></pre>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="education-panel education-visual-panel" id="education-visual-panel">
+                  <div class="education-panel-header education-panel-header--spread">
+                    <div>
+                      <p class="education-kicker">Visual Reference</p>
+                      <h2>Contextual Grounding</h2>
+                    </div>
+                    <span class="education-status-pill education-status-pill--subtle">Click thumbnail to expand</span>
+                  </div>
+
+                  <div class="education-visual-scroll">
+                    <p id="education-visual-note" class="education-panel-copy">
+                      Visual references directly attached to the modeled entities will be displayed here.
+                    </p>
+                    <div id="education-visuals" class="education-visuals" aria-label="Linked CYP visual references"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div
+    class="education-lightbox"
+    id="education-lightbox"
+    hidden
+    aria-hidden="true"
+    role="dialog"
+    aria-label="Expanded CYP page visual"
+  >
+    <button
+      type="button"
+      class="education-lightbox-close"
+      id="education-lightbox-close"
+      aria-label="Close expanded visual"
+    >
+      ×
+    </button>
+    <figure class="education-lightbox-figure">
+      <img id="education-lightbox-image" alt="" />
+      <figcaption id="education-lightbox-caption"></figcaption>
+    </figure>
+  </div>
+
+  <script src="js/ontology-graph.js?v=te_breathing_v4"></script>
+  <script src="js/explorer-data.js?v=te_breathing_v4"></script>
+  <script src="js/explorer-ai.js?v=te_breathing_v4"></script>
+  <script src="js/explorer.js?v=te_breathing_v4"></script>
+</body>
+</html>
