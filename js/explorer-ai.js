@@ -7,6 +7,7 @@
   var SUPPORTED_INTENTS = [
     'base_sequence',
     'base_breathing_safety',
+    'base_errors_corrections',
     'base_mantra_chakra',
     'base_repeats',
     'base_inverses',
@@ -22,6 +23,7 @@
   var TEMPLATE_LABELS = {
     base_sequence: 'Base sequence',
     base_breathing_safety: 'Breathing and safety notes',
+    base_errors_corrections: 'Base errors and corrections',
     base_mantra_chakra: 'Mantra and chakra coverage',
     base_repeats: 'Repeated poses',
     base_inverses: 'Inverse pose pairs',
@@ -37,6 +39,7 @@
   var INTENT_TO_QUESTION_ID = {
     base_sequence: 'base-sequence',
     base_breathing_safety: 'base-breathing-safety',
+    base_errors_corrections: 'base-errors-corrections',
     base_mantra_chakra: 'base-mantra-chakra',
     base_repeats: 'base-repeats',
     base_inverses: 'base-inverses',
@@ -110,6 +113,7 @@
     'If the question cannot be answered by the supported intents, return intent="unsupported".',
     'When a specific asana is mentioned, copy the exact ontology label when possible.',
     'When a specific variant is mentioned, copy the clearest variant label when possible.',
+    'When a question asks which errors can occur across each pose or all poses of Base Surya Namaskar and how they can be corrected, choose base_errors_corrections.',
     'When a question asks about posture guidance, errors, corrections, rules, or constraints for a specific base pose or asana, choose pose_guidance.',
     'Questions asking about breathing, inhale, exhale, breath holding, safety notes, precautions, or careful practice across Base SN poses should map to base_breathing_safety.',
     'Questions asking how many poses a variant has, or comparing pose counts across variants, should map to variant_pose_counts.',
@@ -606,6 +610,7 @@
       'Supported intents:',
       '- base_sequence: ordered sequence of poses in Base Surya Namaskar.',
       '- base_breathing_safety: breathing pattern, inhale/exhale/hold, safety note, or precaution annotations across Base Surya Namaskar poses.',
+      '- base_errors_corrections: errors that can occur in each or all Base Surya Namaskar poses and how those errors can be corrected.',
       '- base_mantra_chakra: which Base Surya Namaskar poses have mantra and chakra annotations.',
       '- base_repeats: repeated poses on the return path in Base Surya Namaskar.',
       '- base_inverses: inverse left/right pose pairs in Base Surya Namaskar.',
@@ -1016,6 +1021,14 @@
       /(base|surya namaskar|sn|pose|poses|sequence)/.test(text);
   }
 
+  function looksLikeBaseErrorsCorrectionsQuestion(questionText) {
+    var text = normalizeKey(questionText);
+
+    return /(error|errors|mistake|mistakes|incorrect|wrong|correction|corrections|corrected|correct|instruction|instructions)/.test(text) &&
+      /(each pose|every pose|all poses|base|base surya namaskar|surya namaskar|sn sequence|pose sequence)/.test(text) &&
+      !/(pose [0-9]+|asana|bhujangasana|pranamasana|hasta|padahastasana|ashwa|chaturanga|ashtanga|parvatasana)/.test(text);
+  }
+
   function looksLikeAsanaVariantCoverageQuestion(questionText) {
     var text = normalizeKey(questionText);
 
@@ -1067,6 +1080,15 @@
       resolvedPlan.poseNumber = null;
       resolvedPlan.unsupportedReason = null;
       resolvedPlan.rationale = 'The question asks for breathing or safety annotations, which are currently modeled on the Base Surya Namaskar poses.';
+    }
+
+    if (looksLikeBaseErrorsCorrectionsQuestion(questionText)) {
+      resolvedPlan.intent = 'base_errors_corrections';
+      resolvedPlan.confidence = Math.max(resolvedPlan.confidence, 0.76);
+      resolvedPlan.poseNumber = null;
+      resolvedPlan.asanaLabel = null;
+      resolvedPlan.unsupportedReason = null;
+      resolvedPlan.rationale = 'The question asks for modeled errors and correction instructions across the Base Surya Namaskar pose sequence.';
     }
 
     if (resolvedPlan.asanaLabel) {

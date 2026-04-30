@@ -431,6 +431,99 @@
       }
     },
     {
+      id: 'base-errors-corrections',
+      title: 'Errors & Corrections',
+      prompt: 'Which errors can occur in each pose of Base Surya Namaskar, and how can they be corrected?',
+      buildSparql: function (options) {
+        return withPrefixes(
+        'SELECT ?poseNumber ?asanaLabel ?asanaLabelSelected ?errorLabel ?errorDescription ?instructionLabel ?correctionText\n' +
+        'WHERE {\n' +
+        getLanguageValueClause(options && options.language) +
+        '  ?pose rdf:type core:Pose ;\n' +
+        '        core:belongsToVariant base:BaseSN_SivanandaYogaVedantaCentre_UsedatIITBHU ;\n' +
+        '        core:poseNumber ?poseNumber ;\n' +
+        '        core:hasAsana ?asana ;\n' +
+        '        core:hasPossibleError ?error .\n' +
+        getAsanaLabelPattern('?asana', '?asanaLabel', '?asanaLabelSelected') +
+        '  OPTIONAL {\n' +
+        '    ?error rdfs:label ?errorLabel .\n' +
+        '    FILTER (LANGMATCHES(LANG(?errorLabel), "en"))\n' +
+        '  }\n' +
+        '  OPTIONAL { ?error core:errorDescription ?errorDescription . }\n' +
+        '  OPTIONAL {\n' +
+        '    ?error core:hasCorrection ?instruction .\n' +
+        '    OPTIONAL {\n' +
+        '      ?instruction rdfs:label ?instructionLabel .\n' +
+        '      FILTER (LANGMATCHES(LANG(?instructionLabel), "en"))\n' +
+        '    }\n' +
+        '    OPTIONAL { ?instruction core:correctionText ?correctionText . }\n' +
+        '  }\n' +
+        '}\n' +
+        'ORDER BY ?poseNumber ?errorLabel ?instructionLabel'
+        );
+      },
+      run: function (model, options) {
+        var baseVariant = model.getBaseVariant();
+        var poses = baseVariant ? model.getOrderedPosesForVariant(baseVariant) : [];
+        var language = normalizeResultLanguage(options && options.language);
+        var rows = [];
+        var poseErrorKeys = [];
+        var correctionKeys = [];
+
+        if (!baseVariant || !poses.length) {
+          return makeEmptyAnswer(this.prompt, 'The Base SN variant could not be located in the loaded ontology.');
+        }
+
+        poses.forEach(function (pose) {
+          var guidance = model.getPoseGuidance(pose);
+          if (!guidance || !guidance.errors.length) {
+            return;
+          }
+
+          guidance.errors.forEach(function (error) {
+            var corrections = error.corrections.length ? error.corrections : [null];
+            poseErrorKeys.push(pose.uri + '|' + error.uri);
+
+            corrections.forEach(function (correction) {
+              if (correction) {
+                correctionKeys.push(error.uri + '|' + correction.uri);
+              }
+              rows.push([
+                String(pose.poseNumber),
+                pose.asanaLabel,
+                getPoseAsanaLanguageLabel(pose, language),
+                error.description || error.label || '-',
+                correction ? (correction.text || correction.label || '-') : '-'
+              ]);
+            });
+          });
+        });
+
+        if (!rows.length) {
+          return makeEmptyAnswer(this.prompt, 'No modeled pose errors were found for the Base SN variant.');
+        }
+
+        return {
+          prompt: this.prompt,
+          narrative: 'Base SN links ' + unique(poseErrorKeys).length + ' pose-error relationships across ' +
+            poses.length + ' poses, with ' + unique(correctionKeys).length +
+            ' error-to-correction instruction links.',
+          facts: [
+            { label: 'Variant', value: baseVariant.displayLabel },
+            { label: 'Poses checked', value: String(poses.length) },
+            { label: 'Pose-error links', value: String(unique(poseErrorKeys).length) },
+            { label: 'Correction links', value: String(unique(correctionKeys).length) }
+          ],
+          table: {
+            columns: ['#', 'Asana', getLanguageColumnLabel(language), 'Error', 'Correction'],
+            rows: rows
+          },
+          sections: [],
+          visuals: model.collectVisualsFromPoses(poses)
+        };
+      }
+    },
+    {
       id: 'base-repeats',
       title: 'Symmetrically Recurring Poses',
       prompt: 'Which poses in the Base Surya Namaskar sequence recur symmetrically in the second half?',

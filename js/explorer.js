@@ -10,7 +10,8 @@
     'shared-asanas',
     'same-asana-equivalences',
     'cyp-visual-references',
-    'base-breathing-safety'
+    'base-breathing-safety',
+    'base-errors-corrections'
   ];
 
   // Curated high-separation categorical palette tuned for this ontology's asana set.
@@ -1135,6 +1136,9 @@
       return 'Visual Grounding';
     }
     if (questionId.indexOf('guidance') !== -1) {
+      return 'Pose Guidance';
+    }
+    if (questionId.indexOf('error') !== -1 || questionId.indexOf('correction') !== -1) {
       return 'Pose Guidance';
     }
     if (questionId.indexOf('shared') !== -1 || questionId.indexOf('same-') !== -1 || questionId.indexOf('variant') !== -1) {
