@@ -1028,8 +1028,18 @@
 
   function isAsanaColumn(columnLabel) {
     var key = normalizeToken(columnLabel);
+    var languageOptions = window.SNEducationData && window.SNEducationData.LANGUAGE_OPTIONS;
+    var languageColumnLabels = Array.isArray(languageOptions)
+      ? languageOptions.map(function (option) {
+        return normalizeToken(option && option.columnLabel);
+      }).filter(Boolean)
+      : [];
+
     return /\basana\b/.test(key) ||
-      /\b(hindi|telugu) label\b/.test(key) ||
+      languageColumnLabels.some(function (labelKey) {
+        return key === labelKey ||
+          (key.slice(-labelKey.length) === labelKey && /\b(asana|pose)\b/.test(key));
+      }) ||
       key === 'first pose' ||
       key === 'last pose';
   }
