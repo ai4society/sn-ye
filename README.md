@@ -14,7 +14,7 @@ The explorer is built as a static web application and runs directly in the brows
 - Provides predefined SPARQL-backed competency questions for Surya Namaskar sequences, variants, asanas, mantras, chakras, body parts, breathing patterns, safety notes, and correction guidance.
 - Supports a Natural Language tab for mapping supported yoga questions to ontology-aware SPARQL templates.
 - Displays generated SPARQL alongside the retrieved ontology results.
-- Includes localized asana label selection for result tables and generated queries.
+- Includes scheduled-language label selection for asana and breathing-pattern result tables and generated queries.
 - Grounds pose and asana results with Common Yoga Protocol page images where available.
 - Uses the SN-YO ontology as its knowledge source.
 
@@ -36,6 +36,16 @@ The explorer is built as a static web application and runs directly in the brows
 Use the [SN-YE website](https://ai4society.github.io/sn-ye/) to run predefined and natural-language ontology queries.
 
 The companion ontology project is [SN-YO](https://ai4society.github.io/sn-yo/), with source available at [ai4society/sn-yo](https://github.com/ai4society/sn-yo).
+
+## Multilingual Labels
+
+SN-YE reads multilingual `rdfs:label` values from the bundled SN-YO ontology and exposes them through the Language selector in predefined, SPARQL, and natural-language query flows. The current selector covers the 22 Indian scheduled languages listed in the Eighth Schedule of the Constitution of India, using web-standard BCP 47 / ISO 639 tags such as `hi`, `te`, `brx`, `doi`, `kok`, `sat`, and `mni`.
+
+The label source is `models/label_csv and script/SN_YO_labels_combined.csv`, which is materialized into `models/modules/core.owl` and `models/master.owl`.
+
+Asana labels preserve the canonical Sanskrit-derived posture names across language scripts, rather than translating them into descriptive pose meanings such as "Cobra Pose" or "Mountain Pose." Breathing-pattern labels, including `BreathingPattern`, `Inhale`, `Exhale`, and `Hold`, use short instruction-style phrases in each language. These labels are intended for ontology querying and display; native-speaker review is recommended before using them as final publication-grade translations.
+
+References used for language scope and tagging include the [Government of India Eighth Schedule language list](https://www.education.gov.in/en/cp_languages), [ISO 639 language codes](https://www.iso.org/iso-639-language-code), [BCP 47 language tags](https://developer.mozilla.org/en-US/docs/Glossary/BCP_47_language_tag), and script resources such as the [Devanagari language documentation](https://motaitalic.github.io/devanagari-documentation/languages/bodo/bodo.html).
 
 ## Local Use
 

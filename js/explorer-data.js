@@ -88,7 +88,14 @@
     { code: 'as', label: 'Assamese', columnLabel: 'Assamese label' },
     { code: 'mai', label: 'Maithili', columnLabel: 'Maithili label' },
     { code: 'sat', label: 'Santali', columnLabel: 'Santali label' },
-    { code: 'mni', label: 'Meitei', columnLabel: 'Meitei label' }
+    { code: 'mni', label: 'Manipuri (Meitei)', columnLabel: 'Manipuri label' },
+    { code: 'brx', label: 'Bodo', columnLabel: 'Bodo label' },
+    { code: 'doi', label: 'Dogri', columnLabel: 'Dogri label' },
+    { code: 'ks', label: 'Kashmiri', columnLabel: 'Kashmiri label' },
+    { code: 'kok', label: 'Konkani', columnLabel: 'Konkani label' },
+    { code: 'ne', label: 'Nepali', columnLabel: 'Nepali label' },
+    { code: 'sa', label: 'Sanskrit', columnLabel: 'Sanskrit label' },
+    { code: 'sd', label: 'Sindhi', columnLabel: 'Sindhi label' }
   ];
 
   var DEFAULT_LANGUAGE = 'hi';
