@@ -75,12 +75,29 @@
 
   var LANGUAGE_OPTIONS = [
     { code: 'hi', label: 'Hindi', columnLabel: 'Hindi label' },
-    { code: 'te', label: 'Telugu', columnLabel: 'Telugu label' }
+    { code: 'bn', label: 'Bengali', columnLabel: 'Bengali label' },
+    { code: 'mr', label: 'Marathi', columnLabel: 'Marathi label' },
+    { code: 'te', label: 'Telugu', columnLabel: 'Telugu label' },
+    { code: 'ta', label: 'Tamil', columnLabel: 'Tamil label' },
+    { code: 'gu', label: 'Gujarati', columnLabel: 'Gujarati label' },
+    { code: 'ur', label: 'Urdu', columnLabel: 'Urdu label' },
+    { code: 'kn', label: 'Kannada', columnLabel: 'Kannada label' },
+    { code: 'or', label: 'Odia', columnLabel: 'Odia label' },
+    { code: 'ml', label: 'Malayalam', columnLabel: 'Malayalam label' },
+    { code: 'pa', label: 'Punjabi', columnLabel: 'Punjabi label' },
+    { code: 'as', label: 'Assamese', columnLabel: 'Assamese label' },
+    { code: 'mai', label: 'Maithili', columnLabel: 'Maithili label' },
+    { code: 'sat', label: 'Santali', columnLabel: 'Santali label' },
+    { code: 'mni', label: 'Meitei', columnLabel: 'Meitei label' }
   ];
+
+  var DEFAULT_LANGUAGE = 'hi';
 
   function normalizeResultLanguage(language) {
     var code = String(language || '').trim().toLowerCase();
-    return code === 'te' ? 'te' : 'hi';
+    return LANGUAGE_OPTIONS.some(function (option) {
+      return option.code === code;
+    }) ? code : DEFAULT_LANGUAGE;
   }
 
   function getLanguageOption(language) {
@@ -811,7 +828,7 @@
 
   QUESTIONS.forEach(function (question) {
     if (typeof question.buildSparql === 'function') {
-      question.sparql = question.buildSparql({ language: 'hi' });
+      question.sparql = question.buildSparql({ language: DEFAULT_LANGUAGE });
     }
   });
 
@@ -819,7 +836,7 @@
     PREFIX_BLOCK: PREFIX_BLOCK,
     QUESTIONS: QUESTIONS,
     LANGUAGE_OPTIONS: LANGUAGE_OPTIONS,
-    DEFAULT_LANGUAGE: 'hi',
+    DEFAULT_LANGUAGE: DEFAULT_LANGUAGE,
     normalizeResultLanguage: normalizeResultLanguage,
     getLanguageOption: getLanguageOption,
     getLanguageColumnLabel: getLanguageColumnLabel,

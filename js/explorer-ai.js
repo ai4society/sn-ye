@@ -195,20 +195,47 @@
     return prefixBlock ? prefixBlock + '\n\n' + queryBody.trim() : queryBody.trim();
   }
 
+  var FALLBACK_LANGUAGE_OPTIONS = [
+    { code: 'hi', label: 'Hindi', columnLabel: 'Hindi label' },
+    { code: 'bn', label: 'Bengali', columnLabel: 'Bengali label' },
+    { code: 'mr', label: 'Marathi', columnLabel: 'Marathi label' },
+    { code: 'te', label: 'Telugu', columnLabel: 'Telugu label' },
+    { code: 'ta', label: 'Tamil', columnLabel: 'Tamil label' },
+    { code: 'gu', label: 'Gujarati', columnLabel: 'Gujarati label' },
+    { code: 'ur', label: 'Urdu', columnLabel: 'Urdu label' },
+    { code: 'kn', label: 'Kannada', columnLabel: 'Kannada label' },
+    { code: 'or', label: 'Odia', columnLabel: 'Odia label' },
+    { code: 'ml', label: 'Malayalam', columnLabel: 'Malayalam label' },
+    { code: 'pa', label: 'Punjabi', columnLabel: 'Punjabi label' },
+    { code: 'as', label: 'Assamese', columnLabel: 'Assamese label' },
+    { code: 'mai', label: 'Maithili', columnLabel: 'Maithili label' },
+    { code: 'sat', label: 'Santali', columnLabel: 'Santali label' },
+    { code: 'mni', label: 'Meitei', columnLabel: 'Meitei label' }
+  ];
+
+  var FALLBACK_DEFAULT_LANGUAGE = 'hi';
+
+  function findFallbackLanguageOption(language) {
+    var code = String(language || '').trim().toLowerCase();
+    return FALLBACK_LANGUAGE_OPTIONS.find(function (option) {
+      return option.code === code;
+    }) || FALLBACK_LANGUAGE_OPTIONS.find(function (option) {
+      return option.code === FALLBACK_DEFAULT_LANGUAGE;
+    });
+  }
+
   function normalizeResultLanguage(language) {
     if (global.SNEducationData && typeof global.SNEducationData.normalizeResultLanguage === 'function') {
       return global.SNEducationData.normalizeResultLanguage(language);
     }
-    return String(language || '').trim().toLowerCase() === 'te' ? 'te' : 'hi';
+    return findFallbackLanguageOption(language).code;
   }
 
   function getLanguageOption(language) {
     if (global.SNEducationData && typeof global.SNEducationData.getLanguageOption === 'function') {
       return global.SNEducationData.getLanguageOption(language);
     }
-    return normalizeResultLanguage(language) === 'te'
-      ? { code: 'te', label: 'Telugu', columnLabel: 'Telugu label' }
-      : { code: 'hi', label: 'Hindi', columnLabel: 'Hindi label' };
+    return findFallbackLanguageOption(language);
   }
 
   function getLanguageColumnLabel(language) {
