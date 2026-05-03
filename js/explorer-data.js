@@ -4,11 +4,11 @@
   var PREFIX_BLOCK = [
     'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>',
     'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>',
-    'PREFIX core: <http://example.org/suryanamaskar/core#>',
-    'PREFIX base: <http://example.org/suryanamaskar/base-sn#>',
-    'PREFIX v1: <http://example.org/suryanamaskar/variant01#>',
-    'PREFIX v2: <http://example.org/suryanamaskar/variant02#>',
-    'PREFIX v3: <http://example.org/suryanamaskar/variant03#>'
+    'PREFIX core: <https://ai4society.github.io/sn-yo/core#>',
+    'PREFIX base: <https://ai4society.github.io/sn-yo/base-sn#>',
+    'PREFIX v1: <https://ai4society.github.io/sn-yo/variant01#>',
+    'PREFIX v2: <https://ai4society.github.io/sn-yo/variant02#>',
+    'PREFIX v3: <https://ai4society.github.io/sn-yo/variant03#>'
   ].join('\n');
 
   function withPrefixes(queryBody) {
