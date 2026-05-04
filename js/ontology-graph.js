@@ -5,7 +5,7 @@
   var RDFS_NS = 'http://www.w3.org/2000/01/rdf-schema#';
   var OWL_NS = 'http://www.w3.org/2002/07/owl#';
   var XML_NS = 'http://www.w3.org/XML/1998/namespace';
-  var CORE_NS = 'https://ai4society.github.io/sn-yo/core#';
+  var CORE_NS = 'https://purl.org/ai4s/yoga/sn-yo/core#';
 
   var DEFAULTS = {
     ontologySrc: 'models/master.owl',

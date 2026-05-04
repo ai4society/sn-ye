@@ -28,11 +28,11 @@
     rdfs: 'http://www.w3.org/2000/01/rdf-schema#',
     owl: 'http://www.w3.org/2002/07/owl#',
     xsd: 'http://www.w3.org/2001/XMLSchema#',
-    core: 'http://example.org/suryanamaskar/core#',
-    base: 'http://example.org/suryanamaskar/base-sn#',
-    v1: 'http://example.org/suryanamaskar/variant01#',
-    v2: 'http://example.org/suryanamaskar/variant02#',
-    v3: 'http://example.org/suryanamaskar/variant03#'
+    core: 'https://purl.org/ai4s/yoga/sn-yo/core#',
+    base: 'https://purl.org/ai4s/yoga/sn-yo/base-sn#',
+    v1: 'https://purl.org/ai4s/yoga/sn-yo/variant01#',
+    v2: 'https://purl.org/ai4s/yoga/sn-yo/variant02#',
+    v3: 'https://purl.org/ai4s/yoga/sn-yo/variant03#'
   };
   var SPARQL_RESULT_LIMIT = 200;
 

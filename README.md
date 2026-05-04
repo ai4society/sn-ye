@@ -2,7 +2,7 @@
 
 [![SN-YE Website](https://img.shields.io/badge/Website-SN--YE-2563eb?style=for-the-badge)](https://ai4society.github.io/sn-ye/)
 [![SN-YE Repository](https://img.shields.io/badge/GitHub-ai4society%2Fsn--ye-24292f?style=for-the-badge&logo=github)](https://github.com/ai4society/sn-ye)
-[![SN-YO Ontology](https://img.shields.io/badge/Ontology-SN--YO-1f6f8b?style=for-the-badge)](https://ai4society.github.io/sn-yo/)
+[![SN-YO Ontology](https://img.shields.io/badge/Ontology-SN--YO-1f6f8b?style=for-the-badge)](https://purl.org/ai4s/yoga/sn-yo/ontology)
 [![SN-YO Repository](https://img.shields.io/badge/GitHub-ai4society%2Fsn--yo-24292f?style=for-the-badge&logo=github)](https://github.com/ai4society/sn-yo)
 
 SN-YE is an ontology-grounded exploration interface for the Surya Namaskar Yoga Ontology. It lets users inspect predefined competency questions, generate SPARQL from natural-language questions, view retrieved ontology facts, and connect query results to visual references from the Common Yoga Protocol.
