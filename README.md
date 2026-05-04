@@ -9,6 +9,19 @@ SN-YE is an ontology-grounded exploration interface for the Surya Namaskar Yoga 
 
 The explorer is built as a static web application and runs directly in the browser over the local OWL knowledge graph.
 
+## Canonical PURLs
+
+SN-YE uses the SN-YO PURL identifiers below in bundled ontology files, SPARQL examples, and natural-language query templates. The `core` module is the main ontology vocabulary and should be used first when referring to SN-YO classes and properties.
+
+| Ontology file | PURL URI |
+| --- | --- |
+| Core ontology module | [`https://purl.org/ai4s/yoga/sn-yo/core`](https://purl.org/ai4s/yoga/sn-yo/core) |
+| Merged ontology / full graph | [`https://purl.org/ai4s/yoga/sn-yo/ontology`](https://purl.org/ai4s/yoga/sn-yo/ontology) |
+| Base Surya Namaskar sequence | [`https://purl.org/ai4s/yoga/sn-yo/base-sn`](https://purl.org/ai4s/yoga/sn-yo/base-sn) |
+| Variant 01 | [`https://purl.org/ai4s/yoga/sn-yo/variant01`](https://purl.org/ai4s/yoga/sn-yo/variant01) |
+| Variant 02 | [`https://purl.org/ai4s/yoga/sn-yo/variant02`](https://purl.org/ai4s/yoga/sn-yo/variant02) |
+| Variant 03 | [`https://purl.org/ai4s/yoga/sn-yo/variant03`](https://purl.org/ai4s/yoga/sn-yo/variant03) |
+
 ## Highlights
 
 - Provides predefined SPARQL-backed competency questions for Surya Namaskar sequences, variants, asanas, mantras, chakras, body parts, breathing patterns, safety notes, and correction guidance.
