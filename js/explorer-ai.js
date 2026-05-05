@@ -196,31 +196,37 @@
   }
 
   var FALLBACK_LANGUAGE_OPTIONS = [
-    { code: 'hi', label: 'Hindi', columnLabel: 'Hindi label' },
-    { code: 'bn', label: 'Bengali', columnLabel: 'Bengali label' },
-    { code: 'mr', label: 'Marathi', columnLabel: 'Marathi label' },
-    { code: 'te', label: 'Telugu', columnLabel: 'Telugu label' },
-    { code: 'ta', label: 'Tamil', columnLabel: 'Tamil label' },
-    { code: 'gu', label: 'Gujarati', columnLabel: 'Gujarati label' },
-    { code: 'ur', label: 'Urdu', columnLabel: 'Urdu label' },
-    { code: 'kn', label: 'Kannada', columnLabel: 'Kannada label' },
-    { code: 'or', label: 'Odia', columnLabel: 'Odia label' },
-    { code: 'ml', label: 'Malayalam', columnLabel: 'Malayalam label' },
-    { code: 'pa', label: 'Punjabi', columnLabel: 'Punjabi label' },
-    { code: 'as', label: 'Assamese', columnLabel: 'Assamese label' },
-    { code: 'mai', label: 'Maithili', columnLabel: 'Maithili label' },
-    { code: 'sat', label: 'Santali', columnLabel: 'Santali label' },
-    { code: 'mni', label: 'Manipuri (Meitei)', columnLabel: 'Manipuri label' },
-    { code: 'brx', label: 'Bodo', columnLabel: 'Bodo label' },
-    { code: 'doi', label: 'Dogri', columnLabel: 'Dogri label' },
-    { code: 'ks', label: 'Kashmiri', columnLabel: 'Kashmiri label' },
-    { code: 'kok', label: 'Konkani', columnLabel: 'Konkani label' },
-    { code: 'ne', label: 'Nepali', columnLabel: 'Nepali label' },
-    { code: 'sa', label: 'Sanskrit', columnLabel: 'Sanskrit label' },
-    { code: 'sd', label: 'Sindhi', columnLabel: 'Sindhi label' }
+    { code: 'en', label: 'English (UN)', columnLabel: 'English (UN) label' },
+    { code: 'ar', label: 'Arabic (UN)', columnLabel: 'Arabic (UN) label' },
+    { code: 'zh', label: 'Chinese (UN)', columnLabel: 'Chinese (UN) label' },
+    { code: 'fr', label: 'French (UN)', columnLabel: 'French (UN) label' },
+    { code: 'ru', label: 'Russian (UN)', columnLabel: 'Russian (UN) label' },
+    { code: 'es', label: 'Spanish (UN)', columnLabel: 'Spanish (UN) label' },
+    { code: 'hi', label: 'Hindi (IN)', columnLabel: 'Hindi (IN) label' },
+    { code: 'bn', label: 'Bengali (IN)', columnLabel: 'Bengali (IN) label' },
+    { code: 'mr', label: 'Marathi (IN)', columnLabel: 'Marathi (IN) label' },
+    { code: 'te', label: 'Telugu (IN)', columnLabel: 'Telugu (IN) label' },
+    { code: 'ta', label: 'Tamil (IN)', columnLabel: 'Tamil (IN) label' },
+    { code: 'gu', label: 'Gujarati (IN)', columnLabel: 'Gujarati (IN) label' },
+    { code: 'ur', label: 'Urdu (IN)', columnLabel: 'Urdu (IN) label' },
+    { code: 'kn', label: 'Kannada (IN)', columnLabel: 'Kannada (IN) label' },
+    { code: 'or', label: 'Odia (IN)', columnLabel: 'Odia (IN) label' },
+    { code: 'ml', label: 'Malayalam (IN)', columnLabel: 'Malayalam (IN) label' },
+    { code: 'pa', label: 'Punjabi (IN)', columnLabel: 'Punjabi (IN) label' },
+    { code: 'as', label: 'Assamese (IN)', columnLabel: 'Assamese (IN) label' },
+    { code: 'mai', label: 'Maithili (IN)', columnLabel: 'Maithili (IN) label' },
+    { code: 'sat', label: 'Santali (IN)', columnLabel: 'Santali (IN) label' },
+    { code: 'mni', label: 'Manipuri (Meitei) (IN)', columnLabel: 'Manipuri (Meitei) (IN) label' },
+    { code: 'brx', label: 'Bodo (IN)', columnLabel: 'Bodo (IN) label' },
+    { code: 'doi', label: 'Dogri (IN)', columnLabel: 'Dogri (IN) label' },
+    { code: 'ks', label: 'Kashmiri (IN)', columnLabel: 'Kashmiri (IN) label' },
+    { code: 'kok', label: 'Konkani (IN)', columnLabel: 'Konkani (IN) label' },
+    { code: 'ne', label: 'Nepali (IN)', columnLabel: 'Nepali (IN) label' },
+    { code: 'sa', label: 'Sanskrit (IN)', columnLabel: 'Sanskrit (IN) label' },
+    { code: 'sd', label: 'Sindhi (IN)', columnLabel: 'Sindhi (IN) label' }
   ];
 
-  var FALLBACK_DEFAULT_LANGUAGE = 'hi';
+  var FALLBACK_DEFAULT_LANGUAGE = 'en';
 
   function findFallbackLanguageOption(language) {
     var code = String(language || '').trim().toLowerCase();
@@ -669,7 +675,7 @@
       question: questionText,
       template: session.templateLabel,
       intent: session.plan.intent,
-      language: session.language || session.plan.language || 'hi',
+      language: session.language || session.plan.language || FALLBACK_DEFAULT_LANGUAGE,
       sparql: session.sparql,
       facts: execution.answer.facts || [],
       table: execution.answer.table || null,

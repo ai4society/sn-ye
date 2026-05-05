@@ -47,7 +47,7 @@
                 <article class="education-feature-card">
                   <span>Language</span>
                   <strong>Localized asana labels</strong>
-                  <p>Use the Language selector to add available non-English asana labels to predefined and natural-language results.</p>
+                  <p>Use the Language selector to add available UN and Indian scheduled-language labels to predefined and natural-language results.</p>
                 </article>
               </div>
             </div>
@@ -91,28 +91,34 @@
                 data-education-language-select
                 name="education-language-select"
               >
-                <option value="hi" selected>Hindi</option>
-                <option value="bn">Bengali</option>
-                <option value="mr">Marathi</option>
-                <option value="te">Telugu</option>
-                <option value="ta">Tamil</option>
-                <option value="gu">Gujarati</option>
-                <option value="ur">Urdu</option>
-                <option value="kn">Kannada</option>
-                <option value="or">Odia</option>
-                <option value="ml">Malayalam</option>
-                <option value="pa">Punjabi</option>
-                <option value="as">Assamese</option>
-                <option value="mai">Maithili</option>
-                <option value="sat">Santali</option>
-                <option value="mni">Manipuri (Meitei)</option>
-                <option value="brx">Bodo</option>
-                <option value="doi">Dogri</option>
-                <option value="ks">Kashmiri</option>
-                <option value="kok">Konkani</option>
-                <option value="ne">Nepali</option>
-                <option value="sa">Sanskrit</option>
-                <option value="sd">Sindhi</option>
+                <option value="en" selected>English (UN)</option>
+                <option value="ar">Arabic (UN)</option>
+                <option value="zh">Chinese (UN)</option>
+                <option value="fr">French (UN)</option>
+                <option value="ru">Russian (UN)</option>
+                <option value="es">Spanish (UN)</option>
+                <option value="hi">Hindi (IN)</option>
+                <option value="bn">Bengali (IN)</option>
+                <option value="mr">Marathi (IN)</option>
+                <option value="te">Telugu (IN)</option>
+                <option value="ta">Tamil (IN)</option>
+                <option value="gu">Gujarati (IN)</option>
+                <option value="ur">Urdu (IN)</option>
+                <option value="kn">Kannada (IN)</option>
+                <option value="or">Odia (IN)</option>
+                <option value="ml">Malayalam (IN)</option>
+                <option value="pa">Punjabi (IN)</option>
+                <option value="as">Assamese (IN)</option>
+                <option value="mai">Maithili (IN)</option>
+                <option value="sat">Santali (IN)</option>
+                <option value="mni">Manipuri (Meitei) (IN)</option>
+                <option value="brx">Bodo (IN)</option>
+                <option value="doi">Dogri (IN)</option>
+                <option value="ks">Kashmiri (IN)</option>
+                <option value="kok">Konkani (IN)</option>
+                <option value="ne">Nepali (IN)</option>
+                <option value="sa">Sanskrit (IN)</option>
+                <option value="sd">Sindhi (IN)</option>
               </select>
             </div>
           </div>
@@ -383,7 +389,7 @@ ORDER BY ?poseNumber</code></pre>
                     <summary>Available asanas with localized labels</summary>
                     <pre><code>SELECT ?asana ?englishLabel ?localizedLabel
 WHERE {
-  VALUES ?language { "hi" }
+  VALUES ?language { "fr" }
   ?asana rdf:type core:Asana .
   ?asana rdfs:label ?englishLabel .
   FILTER(LANG(?englishLabel) = "en")

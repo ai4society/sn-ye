@@ -27,7 +27,7 @@ SN-YE uses the SN-YO PURL identifiers below in bundled ontology files, SPARQL ex
 - Provides predefined SPARQL-backed competency questions for Surya Namaskar sequences, variants, asanas, mantras, chakras, body parts, breathing patterns, safety notes, and correction guidance.
 - Supports a Natural Language tab for mapping supported yoga questions to ontology-aware SPARQL templates.
 - Displays generated SPARQL alongside the retrieved ontology results.
-- Includes scheduled-language label selection for asana and breathing-pattern result tables and generated queries.
+- Includes UN-language and Indian scheduled-language label selection for asana and breathing-pattern result tables and generated queries.
 - Grounds pose and asana results with Common Yoga Protocol page images where available.
 - Uses the SN-YO ontology as its knowledge source.
 
@@ -52,7 +52,7 @@ The companion ontology project is [SN-YO](https://ai4society.github.io/sn-yo/), 
 
 ## Multilingual Labels
 
-SN-YE reads multilingual `rdfs:label` values from the bundled SN-YO ontology and exposes them through the Language selector in predefined, SPARQL, and natural-language query flows. The current selector covers the 22 Indian scheduled languages listed in the Eighth Schedule of the Constitution of India, using web-standard BCP 47 / ISO 639 tags such as `hi`, `te`, `brx`, `doi`, `kok`, `sat`, and `mni`. The current tags are kept stable so website queries and language selectors continue to work consistently.
+SN-YE reads multilingual `rdfs:label` values from the bundled SN-YO ontology and exposes them through the Language selector in predefined, SPARQL, and natural-language query flows. The current selector covers the six official United Nations languages (`ar`, `zh`, `en`, `fr`, `ru`, and `es`) and the 22 Indian scheduled languages listed in the Eighth Schedule of the Constitution of India, for 28 languages in total. Indian language tags use web-standard BCP 47 / ISO 639 tags such as `hi`, `te`, `brx`, `doi`, `kok`, `sat`, and `mni`. The current tags are kept stable so website queries and language selectors continue to work consistently.
 
 The label source is `models/label_csv and script/SN_YO_labels_combined.csv`, which is materialized into `models/modules/core.owl` and `models/master.owl`.
 

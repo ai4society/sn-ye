@@ -113,14 +113,14 @@
     var option = state && state.data && typeof state.data.getLanguageOption === 'function'
       ? state.data.getLanguageOption(state.selectedLanguage)
       : null;
-    return option ? option.label : 'Hindi';
+    return option ? option.label : 'English (UN)';
   }
 
   function normalizeSelectedLanguage(state, language) {
     if (state && state.data && typeof state.data.normalizeResultLanguage === 'function') {
       return state.data.normalizeResultLanguage(language);
     }
-    return String(language || '').trim().toLowerCase() === 'te' ? 'te' : 'hi';
+    return String(language || 'en').trim().toLowerCase() || 'en';
   }
 
   function cloneSparqlPrefixes(extraPrefixes) {
@@ -1821,7 +1821,7 @@
     var plan = session.plan;
     var languageOption = global.SNEducationData && typeof global.SNEducationData.getLanguageOption === 'function'
       ? global.SNEducationData.getLanguageOption(session.language)
-      : { label: session.language === 'te' ? 'Telugu' : 'Hindi' };
+      : { label: session.language || 'English (UN)' };
     var facts = [
       { label: 'Intent', value: plan.intent },
       { label: 'Confidence', value: Math.round(plan.confidence * 100) + '%' },
@@ -2580,7 +2580,7 @@
       currentAnswerView: 'answer',
       workspaceMode: 'predefined',
       activeMode: 'predefined',
-      selectedLanguage: deps.data.DEFAULT_LANGUAGE || 'hi',
+      selectedLanguage: deps.data.DEFAULT_LANGUAGE || 'en',
       languageSelects: [],
       aiBusy: false,
       aiSession: null,
